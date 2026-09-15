@@ -4,272 +4,499 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel Naturaleza Abierta · Valentina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --verde-900:#1f3327;
-    --verde-700:#2f5140;
-    --verde-500:#4a7a63;
-    --verde-200:#c9dccf;
-    --arena-50:#f7f4ee;
-    --arena-100:#efe9dd;
-    --ocre-500:#b8863f;
+    --verde-950:#122119;
+    --verde-900:#1a3124;
+    --verde-800:#234131;
+    --verde-700:#2d503e;
+    --verde-600:#3e6d54;
+    --verde-500:#528c6e;
+    --verde-100:#e4eee7;
+    --verde-50:#f0f6f2;
+    
+    --arena-50:#f7f9f7;
+    --arena-100:#f0f2ef;
+    --arena-200:#e3e7e2;
+    
     --ocre-600:#9c6f2f;
-    --rojo-600:#a33b3b;
-    --tinta:#20241f;
-    --borde:#dcd5c4;
-    --radio:8px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --ocre-100:#fbf3e5;
+    --ocre-500:#d49741;
+    
+    --rojo-600:#c23e3e;
+    --rojo-50:#fdf2f2;
+    
+    --tinta-fuerte:#111814;
+    --tinta:#232d27;
+    --tinta-suave:#66736a;
+    --borde:#e2e8e3;
+    --borde-suave:#edf1ee;
+    
+    --radio-sm:6px;
+    --radio:10px;
+    --radio-lg:14px;
+    
+    --sombra-sm: 0 1px 2px rgba(18, 33, 25, 0.04);
+    --sombra: 0 4px 12px rgba(18, 33, 25, 0.04), 0 1px 2px rgba(18, 33, 25, 0.02);
+    --sombra-md: 0 10px 25px -4px rgba(18, 33, 25, 0.07), 0 4px 10px -2px rgba(18, 33, 25, 0.03);
+    --sombra-lg: 0 20px 30px -6px rgba(18, 33, 25, 0.15);
   }
+
   *{box-sizing:border-box;}
   body{
     margin:0;
     background:var(--arena-50);
     color:var(--tinta);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-size:14px;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size:13.5px;
+    line-height:1.5;
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
   }
+
   h1,h2,h3{
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color:var(--verde-900);
+    color:var(--tinta-fuerte);
     font-weight:700;
-    letter-spacing:-.01em;
+    letter-spacing:-0.02em;
     margin:0 0 4px 0;
   }
   h4{
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color:var(--verde-900);
+    color:var(--tinta-fuerte);
     font-weight:600;
-    margin:0 0 10px;
+    font-size:14px;
+    margin:0 0 12px;
   }
-  a{color:var(--verde-700);}
+  a{color:var(--verde-600); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
   button{
     font-family:inherit;
+    font-weight:600;
     cursor:pointer;
-    border:1px solid var(--verde-700);
+    border:1px solid transparent;
     background:var(--verde-700);
     color:#fff;
-    padding:8px 14px;
-    border-radius:var(--radio);
+    padding:8px 16px;
+    border-radius:var(--radio-sm);
     font-size:13px;
-    transition:background .15s ease;
+    box-shadow:var(--sombra-sm);
+    transition:all .18s ease;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
   }
-  button:hover{background:var(--verde-900);}
+  button:hover{
+    background:var(--verde-800);
+    box-shadow:0 2px 6px rgba(35,65,49,.2);
+  }
   button.secundario{
-    background:transparent;
-    color:var(--verde-700);
+    background:#fff;
+    color:var(--tinta);
+    border:1px solid var(--borde);
+    box-shadow:var(--sombra-sm);
   }
-  button.secundario:hover{background:var(--verde-200);}
-  button.peligro{background:var(--rojo-600);border-color:var(--rojo-600);}
-  button.peligro:hover{background:#7e2c2c;}
-  button:disabled{opacity:.45;cursor:not-allowed;}
+  button.secundario:hover{
+    background:var(--arena-50);
+    border-color:var(--verde-500);
+    color:var(--verde-800);
+  }
+  button.peligro{
+    background:var(--rojo-600);
+    color:#fff;
+  }
+  button.peligro:hover{background:#a32e2e;}
+  button:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;}
+
   input,select,textarea{
     font-family:inherit;
     font-size:13px;
-    padding:7px 9px;
+    padding:8px 12px;
     border:1px solid var(--borde);
-    border-radius:var(--radio);
+    border-radius:var(--radio-sm);
     background:#fff;
-    color:var(--tinta);
+    color:var(--tinta-fuerte);
     width:100%;
+    outline:none;
+    transition:all .15s ease;
   }
-  textarea{min-height:60px;resize:vertical;}
-  label{font-size:12px;color:var(--verde-700);font-weight:600;display:block;margin-bottom:3px;}
+  input:focus,select:focus,textarea:focus{
+    border-color:var(--verde-600);
+    box-shadow:0 0 0 3px rgba(62,109,84,.14);
+  }
+  textarea{min-height:70px;resize:vertical;}
+  label{
+    font-size:12px;
+    color:var(--tinta-suave);
+    font-weight:600;
+    display:block;
+    margin-bottom:5px;
+    text-transform:capitalize;
+  }
 
   /* ---------- Login ---------- */
   #vista-login, #vista-recuperar{
     min-height:100vh;
     display:flex;align-items:center;justify-content:center;
     padding:24px;
+    background: radial-gradient(circle at 50% 20%, #eaf2ec 0%, var(--arena-50) 65%);
   }
   .envoltorio-login{
-    width:100%;max-width:380px;
+    width:100%;max-width:390px;
     display:flex;flex-direction:column;align-items:center;
   }
   .marca-grande{
     display:flex;flex-direction:column;align-items:center;text-align:center;
-    margin-bottom:24px;
+    margin-bottom:28px;
   }
   .marca-grande img{
-    width:84px;height:84px;object-fit:contain;
+    width:72px;height:72px;object-fit:contain;
     margin-bottom:14px;
-    filter:drop-shadow(0 2px 6px rgba(31,51,39,.15));
+    border-radius:18px;
+    background:#fff;
+    padding:8px;
+    box-shadow:var(--sombra);
   }
   .marca-grande h1{
-    font-size:20px;margin:0 0 3px;
-    color:var(--verde-900);
+    font-size:22px;margin:0 0 4px;
+    color:var(--verde-950);
   }
   .marca-grande p{
-    margin:0;font-size:13px;color:#8a8570;
+    margin:0;font-size:13.5px;color:var(--tinta-suave);
   }
   .caja-login{
     background:#fff;
     border:1px solid var(--borde);
-    border-radius:12px;
-    padding:30px 30px 26px;
+    border-radius:var(--radio-lg);
+    padding:32px;
     width:100%;
-    box-shadow:0 4px 18px rgba(31,51,39,.09);
+    box-shadow:var(--sombra-md);
   }
-  .caja-login .campo{margin-bottom:14px;}
-  .caja-login p.error{color:var(--rojo-600);font-size:12.5px;margin:8px 0 0;}
-  .marca{
-    display:flex;align-items:center;gap:10px;margin-bottom:22px;
+  .caja-login .campo{margin-bottom:16px;}
+  .caja-login p.error{
+    color:var(--rojo-600);
+    background:var(--rojo-50);
+    padding:8px 12px;
+    border-radius:var(--radio-sm);
+    font-size:12px;margin:10px 0 0;
   }
-  .marca .hoja{
-    width:38px;height:38px;border-radius:9px;
+  .enlace-tenue{
+    background:none;border:none;color:var(--tinta-suave);
+    font-size:12px;cursor:pointer;padding:0;font-weight:500;box-shadow:none;
+  }
+  .enlace-tenue:hover{color:var(--verde-700);text-decoration:underline;background:none;box-shadow:none;}
+  .caja-login p.ok{
+    color:var(--verde-700);
+    background:var(--verde-50);
+    padding:8px 12px;
+    border-radius:var(--radio-sm);
+    font-size:12px;margin:10px 0 0;
+  }
+
+  /* ---------- Layout general ---------- */
+  #app{display:none;min-height:100vh;grid-template-columns:250px 1fr;}
+  #app.activo{display:grid;}
+  aside{
+    background:var(--verde-950);
+    color:#e0e8e3;
+    padding:20px 14px;
+    display:flex;
+    flex-direction:column;
+    border-right:1px solid rgba(255,255,255,.05);
+  }
+  aside .marca{
+    display:flex;align-items:center;gap:12px;
+    padding:4px 8px 18px 8px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    margin-bottom:12px;
+  }
+  aside .marca .hoja{
+    width:36px;height:36px;border-radius:8px;
     background:#fff;
     object-fit:contain;
     padding:3px;
     flex-shrink:0;
+    box-shadow:0 2px 6px rgba(0,0,0,.2);
   }
-  .enlace-tenue{
-    background:none;border:none;color:var(--verde-700);
-    font-size:12px;text-decoration:underline;cursor:pointer;padding:0;
+  aside nav{
+    flex:1;display:flex;flex-direction:column;gap:3px;
+    overflow-y:auto;
+    padding-right:4px;
   }
-  .caja-login p.ok{color:var(--verde-700);font-size:12.5px;margin:8px 0 0;}
+  aside nav::-webkit-scrollbar{width:4px;}
+  aside nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px;}
 
-  /* ---------- Layout general ---------- */
-  #app{display:none;min-height:100vh;grid-template-columns:220px 1fr;}
-  #app.activo{display:grid;}
-  aside{
-    background:var(--verde-900);
-    color:var(--arena-100);
-    padding:22px 14px;
-    display:flex;flex-direction:column;
-  }
-  aside .marca{color:#fff;}
-  aside nav{flex:1;display:flex;flex-direction:column;gap:2px;margin-top:8px;}
   aside nav button.enlace{
-    background:none;border:none;color:var(--arena-100);
-    text-align:left;padding:9px 10px;border-radius:var(--radio);
-    font-size:13px;opacity:.85;
+    background:transparent;border:none;
+    color:#b4c5ba;
+    text-align:left;
+    padding:8px 12px;
+    border-radius:var(--radio-sm);
+    font-size:13px;
+    font-weight:500;
+    width:100%;
+    justify-content:flex-start;
+    box-shadow:none;
+    transition:all .15s ease;
   }
-  aside nav button.enlace:hover{background:rgba(255,255,255,.08);opacity:1;}
-  aside nav button.enlace.activo{background:rgba(255,255,255,.14);opacity:1;font-weight:600;}
+  aside nav button.enlace:hover{
+    background:rgba(255,255,255,.06);
+    color:#fff;
+    transform:translateX(2px);
+  }
+  aside nav button.enlace.activo{
+    background:rgba(255,255,255,.12);
+    color:#fff;
+    font-weight:600;
+  }
   aside .separador{
-    text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;
-    color:var(--verde-200);opacity:.6;margin:16px 0 4px 10px;
+    text-transform:uppercase;font-size:10px;font-weight:700;letter-spacing:.08em;
+    color:rgba(180,197,186,.5);margin:16px 0 6px 12px;
   }
   aside .pie-usuario{
-    border-top:1px solid rgba(255,255,255,.15);
-    padding-top:12px;font-size:12px;opacity:.85;
+    border-top:1px solid rgba(255,255,255,.08);
+    padding-top:14px;
+    margin-top:10px;
+  }
+  .usuario-info-box{
+    display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:0 4px;
+  }
+  .avatar-circulo{
+    width:34px;height:34px;border-radius:50%;
+    background:var(--verde-800);
+    border:1px solid rgba(255,255,255,.15);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:12.5px;color:#fff;flex-shrink:0;
   }
   aside .pie-usuario .rol{
-    display:inline-block;margin-top:4px;
-    background:var(--ocre-500);color:#fff;font-size:10.5px;
-    padding:1px 7px;border-radius:20px;
+    display:inline-block;
+    background:rgba(212,151,65,.18);
+    color:#f4ba6d;
+    border:1px solid rgba(212,151,65,.3);
+    font-size:10px;font-weight:700;letter-spacing:.03em;
+    padding:1px 8px;border-radius:12px;
+    text-transform:uppercase;
   }
-  main{padding:26px 32px;overflow-x:auto;}
+  aside .btn-pie{
+    width:100%;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+    color:#c4d3c9;
+    font-size:12px;
+    font-weight:500;
+    padding:7px 10px;
+    box-shadow:none;
+  }
+  aside .btn-pie:hover{
+    background:rgba(255,255,255,.1);
+    color:#fff;
+    border-color:rgba(255,255,255,.15);
+  }
+
+  main{
+    padding:30px 40px;
+    overflow-x:auto;
+    max-width:1600px;
+  }
   header.topbar{
-    display:flex;justify-content:space-between;align-items:flex-start;
-    margin-bottom:20px;flex-wrap:wrap;gap:10px;
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-bottom:24px;flex-wrap:wrap;gap:12px;
   }
-  header.topbar p{color:var(--verde-700);margin:2px 0 0;font-size:13px;}
+  header.topbar h2{
+    font-size:24px;letter-spacing:-0.03em;margin:0;
+  }
+  header.topbar p{
+    color:var(--tinta-suave);margin:4px 0 0;font-size:13px;
+  }
 
   /* ---------- Tablas ---------- */
   .panel-tabla{
-    background:#fff;border:1px solid var(--borde);border-radius:8px;overflow:hidden;
+    background:#fff;
+    border:1px solid var(--borde);
+    border-radius:var(--radio-lg);
+    box-shadow:var(--sombra);
+    overflow:hidden;
   }
   .panel-tabla .barra{
     display:flex;justify-content:space-between;align-items:center;
-    padding:12px 16px;border-bottom:1px solid var(--borde);gap:10px;flex-wrap:wrap;
+    padding:14px 20px;
+    border-bottom:1px solid var(--borde-suave);
+    background:#fff;
+    gap:12px;flex-wrap:wrap;
   }
-  .panel-tabla .barra input[type="search"]{max-width:220px;}
-  table.datos{width:100%;border-collapse:collapse;font-size:12.8px;}
+  .panel-tabla .barra input[type="search"]{
+    max-width:280px;
+    background:#fafbfa;
+  }
+  table.datos{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;}
   table.datos th{
-    text-align:left;background:var(--arena-100);color:var(--verde-900);
-    padding:8px 10px;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;
-    border-bottom:1px solid var(--borde);white-space:nowrap;
+    text-align:left;
+    background:#fbfcfa;
+    color:var(--tinta-suave);
+    padding:11px 16px;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    border-bottom:1px solid var(--borde);
+    white-space:nowrap;
   }
   table.datos td{
-    padding:8px 10px;border-bottom:1px solid var(--arena-100);
-    max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    padding:12px 16px;
+    border-bottom:1px solid var(--borde-suave);
+    max-width:260px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:var(--tinta);
   }
-  table.datos tbody tr:hover{background:var(--arena-50);}
-  .chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
-  .chip.verde{background:#dcecdf;color:var(--verde-900);}
-  .chip.ocre{background:#f2e3c8;color:var(--ocre-600);}
-  .chip.rojo{background:#f3dcdc;color:var(--rojo-600);}
-  .chip.gris{background:#e6e2d6;color:#5c5747;}
-  .vacio{padding:40px 16px;text-align:center;color:#8a8570;}
-  .cargando{padding:40px 16px;text-align:center;color:var(--verde-700);}
+  table.datos tbody tr:last-child td{border-bottom:none;}
+  table.datos tbody tr{transition:background .12s ease;}
+  table.datos tbody tr:hover{background:#f8faf9;}
+
+  .mono-id{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    color:var(--tinta-suave);
+    background:var(--arena-100);
+    padding:2px 6px;
+    border-radius:4px;
+    display:inline-block;
+  }
+
+  /* Chips elegantes */
+  .chip{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;line-height:1.2;
+  }
+  .chip.verde{background:var(--verde-50);color:var(--verde-700);border:1px solid var(--verde-100);}
+  .chip.ocre{background:var(--ocre-100);color:var(--ocre-600);border:1px solid rgba(212,151,65,.25);}
+  .chip.rojo{background:var(--rojo-50);color:var(--rojo-600);border:1px solid rgba(194,62,62,.2);}
+  .chip.gris{background:#f1f3f1;color:var(--tinta-suave);border:1px solid var(--borde);}
+  
+  .vacio{padding:50px 20px;text-align:center;color:var(--tinta-suave);font-size:13.5px;}
+  .cargando{padding:50px 20px;text-align:center;color:var(--verde-600);font-weight:500;}
 
   /* ---------- Modal ---------- */
   .fondo-modal{
-    display:none;position:fixed;inset:0;background:rgba(31,36,31,.45);
-    align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;z-index:50;
+    display:none;position:fixed;inset:0;
+    background:rgba(18, 33, 25, 0.45);
+    backdrop-filter:blur(3px);
+    align-items:flex-start;justify-content:center;
+    padding:48px 16px;overflow-y:auto;z-index:100;
   }
   .fondo-modal.activo{display:flex;}
   .modal{
-    background:#fff;border-radius:10px;max-width:560px;width:100%;
-    padding:26px 26px 22px;box-shadow:0 8px 30px rgba(0,0,0,.2);
+    background:#fff;
+    border-radius:var(--radio-lg);
+    max-width:580px;width:100%;
+    padding:28px 30px;
+    box-shadow:var(--sombra-lg);
+    border:1px solid var(--borde);
+    animation:aparece .18s ease-out;
   }
-  .modal h3{margin-bottom:16px;}
-  .modal .rejilla{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;}
+  @keyframes aparece{
+    from{opacity:0;transform:scale(0.97) translateY(-6px);}
+    to{opacity:1;transform:scale(1) translateY(0);}
+  }
+  .modal h3{margin-bottom:18px;font-size:18px;}
+  .modal .rejilla{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;}
   .modal .campo.ancho{grid-column:1/-1;}
-  .modal .acciones{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+  .modal .acciones{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;border-top:1px solid var(--borde-suave);padding-top:16px;}
 
-  /* ---------- Pagos masivos ---------- */
-  .tarjetas-resumen{display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
-  .tarjeta{
-    background:#fff;border:1px solid var(--borde);border-radius:8px;
-    padding:14px 18px;min-width:150px;
+  /* ---------- Pagos masivos & Dashboard Cards ---------- */
+  .tarjetas-resumen{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:16px;
+    margin-bottom:24px;
   }
-  .tarjeta .num{font-size:22px;font-weight:700;color:var(--verde-900);}
-  .tarjeta .etq{font-size:12px;color:#8a8570;}
+  .tarjeta{
+    background:#fff;
+    border:1px solid var(--borde);
+    border-radius:var(--radio);
+    padding:18px 20px;
+    box-shadow:var(--sombra-sm);
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .tarjeta .num{
+    font-size:26px;font-weight:700;color:var(--verde-950);
+    letter-spacing:-0.03em;line-height:1.1;
+  }
+  .tarjeta .etq{
+    font-size:12px;color:var(--tinta-suave);font-weight:500;
+  }
+
   .grupo-afiliado{
-    background:#fff;border:1px solid var(--borde);border-radius:8px;margin-bottom:12px;overflow:hidden;
+    background:#fff;
+    border:1px solid var(--borde);
+    border-radius:var(--radio);
+    margin-bottom:12px;
+    overflow:hidden;
+    box-shadow:var(--sombra-sm);
   }
   .grupo-afiliado .cab{
     display:flex;justify-content:space-between;align-items:center;
-    padding:11px 15px;background:var(--arena-100);cursor:pointer;
+    padding:12px 18px;background:#fbfcfa;cursor:pointer;
+    border-bottom:1px solid var(--borde-suave);
   }
-  .grupo-afiliado .cab strong{color:var(--verde-900);}
-  .grupo-afiliado .cuerpo{padding:0 15px;}
+  .grupo-afiliado .cab:hover{background:#f4f6f4;}
+  .grupo-afiliado .cab strong{color:var(--verde-950);font-size:13.5px;}
+  .grupo-afiliado .cuerpo{padding:4px 18px 12px;}
   .fila-comision{
     display:flex;justify-content:space-between;align-items:center;
-    padding:9px 0;border-bottom:1px solid var(--arena-100);font-size:12.8px;
+    padding:10px 0;border-bottom:1px solid var(--borde-suave);font-size:13px;
   }
   .fila-comision:last-child{border-bottom:none;}
   .fila-lote-detalle{
-    display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr auto;gap:10px;align-items:center;
-    padding:11px 15px;border-bottom:1px solid var(--arena-100);
+    display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr auto;gap:12px;align-items:center;
+    padding:12px 0;border-bottom:1px solid var(--borde-suave);
   }
   .fila-lote-detalle:last-child{border-bottom:none;}
-  .tab-lotes{display:flex;gap:8px;margin-bottom:16px;}
-  .tab-lotes button{background:transparent;color:var(--verde-700);}
-  .tab-lotes button.activo{background:var(--verde-700);color:#fff;}
+  
+  .tab-lotes{display:flex;gap:8px;margin-bottom:20px;}
+  .tab-lotes button{
+    background:#fff;color:var(--tinta-suave);border:1px solid var(--borde);
+    font-size:13px;padding:8px 16px;box-shadow:none;
+  }
+  .tab-lotes button.activo{
+    background:var(--verde-700);color:#fff;border-color:var(--verde-700);
+    box-shadow:var(--sombra-sm);
+  }
+
   .oculto{display:none !important;}
+
   .rejilla-dashboard{
-    display:grid;grid-template-columns:1fr 1fr;gap:16px;
+    display:grid;grid-template-columns:1fr 1fr;gap:20px;
   }
   .rejilla-dashboard .tarjeta-grafico{
-    background:#fff;border:1px solid var(--borde);border-radius:8px;
-    padding:16px 18px;
+    background:#fff;border:1px solid var(--borde);border-radius:var(--radio-lg);
+    padding:20px 22px;box-shadow:var(--sombra-sm);
   }
   .rejilla-dashboard .tarjeta-grafico.ancho{grid-column:1/-1;}
-  .rejilla-dashboard .tarjeta-grafico h4{
-    margin:0 0 10px;font-size:13px;color:var(--verde-900);
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-  }
-  .rejilla-dashboard canvas{max-height:260px;}
-  @media(max-width:820px){
-    .rejilla-dashboard{grid-template-columns:1fr;}
-  }
+  .rejilla-dashboard canvas{max-height:270px;}
+
   .msg-permiso{
-    background:#f2e3c8;color:var(--ocre-600);padding:10px 14px;border-radius:var(--radio);
-    font-size:12.5px;margin-bottom:14px;
+    background:var(--ocre-100);color:var(--ocre-600);border:1px solid rgba(212,151,65,.3);
+    padding:12px 16px;border-radius:var(--radio);font-size:13px;margin-bottom:18px;font-weight:500;
   }
-  @media(max-width:820px){
+
+  @media(max-width:900px){
     #app.activo{grid-template-columns:1fr;}
-    aside{flex-direction:row;overflow-x:auto;align-items:center;}
-    aside nav{flex-direction:row;margin-top:0;}
+    aside{padding:14px;gap:10px;}
+    aside .marca{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+    aside nav{flex-direction:row;overflow-x:auto;padding-bottom:4px;}
+    aside nav button.enlace{white-space:nowrap;padding:7px 12px;}
     aside .separador{display:none;}
     aside .pie-usuario{display:none;}
-    main{padding:18px;}
-    .modal .rejilla{grid-template-columns:1fr;}
-    .fila-lote-detalle{grid-template-columns:1fr;gap:6px;}
+    main{padding:20px 16px;}
+    .rejilla-dashboard{grid-template-columns:1fr;}
+    .fila-lote-detalle{grid-template-columns:1fr;gap:8px;}
   }
 </style>
 </head>
@@ -287,26 +514,26 @@
       <form id="form-login">
         <div class="campo">
           <label>Correo</label>
-          <input type="email" id="login-email" required autocomplete="username">
+          <input type="email" id="login-email" required autocomplete="username" placeholder="tu@correo.com">
         </div>
         <div class="campo">
           <label>Contraseña</label>
-          <input type="password" id="login-pass" required autocomplete="current-password">
+          <input type="password" id="login-pass" required autocomplete="current-password" placeholder="••••••••">
         </div>
-        <button type="submit" style="width:100%;" id="btn-login">Entrar</button>
+        <button type="submit" style="width:100%;margin-top:4px;" id="btn-login">Iniciar sesión</button>
         <p class="error oculto" id="login-error"></p>
-        <p style="margin:12px 0 0;text-align:center;">
+        <p style="margin:16px 0 0;text-align:center;">
           <button type="button" class="enlace-tenue" id="btn-mostrar-olvide">¿Olvidaste tu contraseña?</button>
         </p>
       </form>
 
-      <form id="form-olvide" class="oculto" style="margin-top:14px;border-top:1px solid var(--borde);padding-top:14px;">
-        <p style="margin:0 0 10px;font-size:12.5px;color:#8a8570;">Escribe tu correo y te enviaremos un enlace para definir una nueva contraseña.</p>
+      <form id="form-olvide" class="oculto" style="margin-top:16px;border-top:1px solid var(--borde);padding-top:16px;">
+        <p style="margin:0 0 12px;font-size:12.5px;color:var(--tinta-suave);">Escribe tu correo y te enviaremos un enlace para definir una nueva contraseña.</p>
         <div class="campo">
           <label>Correo</label>
-          <input type="email" id="olvide-email" required>
+          <input type="email" id="olvide-email" required placeholder="tu@correo.com">
         </div>
-        <button type="submit" style="width:100%;" id="btn-olvide">Enviar enlace</button>
+        <button type="submit" style="width:100%;margin-top:6px;" id="btn-olvide">Enviar enlace</button>
         <button type="button" class="secundario" style="width:100%;margin-top:8px;" id="btn-cancelar-olvide">Cancelar</button>
         <p class="error oculto" id="olvide-error"></p>
         <p class="ok oculto" id="olvide-ok">Listo, revisa ese correo (incluida la carpeta de spam) para el enlace.</p>
@@ -315,13 +542,13 @@
   </div>
 </div>
 
-<!-- ================= DEFINIR NUEVA CONTRASEÑA (llega desde el enlace del correo) ================= -->
+<!-- ================= DEFINIR NUEVA CONTRASEÑA ================= -->
 <div id="vista-recuperar" style="display:none;">
   <div class="envoltorio-login">
     <div class="marca-grande">
       <img alt="Naturaleza Abierta" src="https://www.naturalezaabierta.com/wp-content/uploads/2026/03/cropped-cropped-solo-logo-WEB2.png">
       <h1>Nueva contraseña</h1>
-      <p>Define tu nueva contraseña de acceso</p>
+      <p>Define tu nueva clave de acceso</p>
     </div>
     <div class="caja-login">
       <form id="form-recuperar">
@@ -333,7 +560,7 @@
           <label>Confirmar contraseña</label>
           <input type="password" id="recuperar-pass2" required minlength="6" autocomplete="new-password">
         </div>
-        <button type="submit" style="width:100%;" id="btn-recuperar">Guardar contraseña</button>
+        <button type="submit" style="width:100%;margin-top:4px;" id="btn-recuperar">Guardar contraseña</button>
         <p class="error oculto" id="recuperar-error"></p>
       </form>
     </div>
@@ -346,43 +573,48 @@
     <div class="marca">
       <img class="hoja" alt="Naturaleza Abierta" src="https://www.naturalezaabierta.com/wp-content/uploads/2026/03/cropped-cropped-solo-logo-WEB2.png">
       <div>
-        <div style="font-weight:700;">Naturaleza Abierta</div>
-        <div style="font-size:11px;opacity:.75;">Panel Valentina</div>
+        <div style="font-weight:700;color:#fff;font-size:14px;letter-spacing:-0.01em;">Naturaleza Abierta</div>
+        <div style="font-size:11px;color:#a4b8ab;">Panel Valentina</div>
       </div>
     </div>
     <nav id="nav-principal">
       <button class="enlace" data-vista="dashboard">📊 Dashboard</button>
       <div class="separador">Ventas y clientes</div>
-      <button class="enlace" data-vista="envios">Envíos del día</button>
-      <button class="enlace" data-vista="clientes">Clientes</button>
-      <button class="enlace" data-vista="compras">Compras</button>
-      <button class="enlace" data-vista="pagos">Pagos</button>
+      <button class="enlace" data-vista="envios">📦 Envíos del día</button>
+      <button class="enlace" data-vista="clientes">👥 Clientes</button>
+      <button class="enlace" data-vista="compras">🛍️ Compras</button>
+      <button class="enlace" data-vista="pagos">💳 Pagos</button>
 
       <div class="separador">Afiliados</div>
-      <button class="enlace" data-vista="afiliados">Afiliados</button>
-      <button class="enlace" data-vista="comisiones">Comisiones</button>
-      <button class="enlace" data-vista="pagosmasivos">Pagos masivos</button>
+      <button class="enlace" data-vista="afiliados">🤝 Afiliados</button>
+      <button class="enlace" data-vista="comisiones">💰 Comisiones</button>
+      <button class="enlace" data-vista="pagosmasivos">⚡ Pagos masivos</button>
 
       <div class="separador">Catálogo</div>
-      <button class="enlace" data-vista="productos_servicios">Productos y servicios</button>
-      <button class="enlace" data-vista="eventos_experiencias">Eventos y experiencias</button>
+      <button class="enlace" data-vista="productos_servicios">🌿 Productos y servicios</button>
+      <button class="enlace" data-vista="eventos_experiencias">🎫 Eventos y experiencias</button>
 
       <div class="separador">Bot Valentina</div>
-      <button class="enlace" data-vista="respuestas_inteligentes">Respuestas</button>
-      <button class="enlace" data-vista="disparadores_venta">Disparadores de venta</button>
-      <button class="enlace" data-vista="creativos">Creativos</button>
-      <button class="enlace" data-vista="config">Configuración</button>
+      <button class="enlace" data-vista="respuestas_inteligentes">💬 Respuestas</button>
+      <button class="enlace" data-vista="disparadores_venta">🎯 Disparadores de venta</button>
+      <button class="enlace" data-vista="creativos">🎨 Creativos</button>
+      <button class="enlace" data-vista="config">⚙️ Configuración</button>
 
       <div class="separador oculto" id="sep-admin">Administración</div>
-      <button class="enlace oculto" id="nav-permisos" data-vista="permisos_area">Permisos por área</button>
-      <button class="enlace oculto" id="nav-usuarios" data-vista="usuarios_panel">Usuarios del panel</button>
+      <button class="enlace oculto" id="nav-permisos" data-vista="permisos_area">🔐 Permisos por área</button>
+      <button class="enlace oculto" id="nav-usuarios" data-vista="usuarios_panel">👤 Usuarios del panel</button>
     </nav>
     <div class="pie-usuario">
-      <div id="pie-nombre">—</div>
-      <span class="rol" id="pie-rol">…</span>
-      <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
-        <button class="secundario" style="width:100%;color:var(--arena-100);border-color:rgba(255,255,255,.3);" id="btn-cambiar-clave">Cambiar contraseña</button>
-        <button class="secundario" style="width:100%;color:var(--arena-100);border-color:rgba(255,255,255,.3);" id="btn-salir">Cerrar sesión</button>
+      <div class="usuario-info-box">
+        <div class="avatar-circulo" id="pie-avatar">U</div>
+        <div style="overflow:hidden;flex:1;">
+          <div id="pie-nombre" style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;">—</div>
+          <span class="rol" id="pie-rol">…</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button class="btn-pie" id="btn-cambiar-clave">Cambiar clave</button>
+        <button class="btn-pie" id="btn-salir">Cerrar sesión</button>
       </div>
     </div>
   </aside>
@@ -399,40 +631,40 @@
   </main>
 </div>
 
-<!-- ================= MODAL GENÉRICO (crear/editar fila) ================= -->
+<!-- ================= MODAL GENÉRICO ================= -->
 <div class="fondo-modal" id="fondo-modal">
   <div class="modal">
     <h3 id="modal-titulo">Editar</h3>
     <form id="form-modal">
       <div class="rejilla" id="modal-campos"></div>
-      <p class="error oculto" id="modal-error" style="color:var(--rojo-600);margin-top:12px;"></p>
+      <p class="error oculto" id="modal-error" style="color:var(--rojo-600);background:var(--rojo-50);padding:8px 12px;border-radius:var(--radio-sm);font-size:12px;margin-top:14px;"></p>
       <div class="acciones">
         <button type="button" class="secundario" id="modal-cancelar">Cancelar</button>
         <button type="button" class="peligro oculto" id="modal-eliminar">Eliminar</button>
-        <button type="submit" id="modal-guardar">Guardar</button>
+        <button type="submit" id="modal-guardar">Guardar cambios</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- ================= MODAL CAMBIAR CONTRASEÑA (usuario ya logueado) ================= -->
+<!-- ================= MODAL CAMBIAR CONTRASEÑA ================= -->
 <div class="fondo-modal" id="fondo-modal-clave">
-  <div class="modal" style="max-width:380px;">
+  <div class="modal" style="max-width:400px;">
     <h3>Cambiar mi contraseña</h3>
     <form id="form-cambiar-clave">
-      <div class="campo" style="margin-bottom:12px;">
+      <div class="campo" style="margin-bottom:14px;">
         <label>Nueva contraseña</label>
         <input type="password" id="clave-nueva1" required minlength="6" autocomplete="new-password">
       </div>
-      <div class="campo" style="margin-bottom:12px;">
+      <div class="campo" style="margin-bottom:14px;">
         <label>Confirmar nueva contraseña</label>
         <input type="password" id="clave-nueva2" required minlength="6" autocomplete="new-password">
       </div>
-      <p class="error oculto" id="clave-error" style="color:var(--rojo-600);margin:0 0 8px;"></p>
-      <p class="ok oculto" id="clave-ok" style="color:var(--verde-700);margin:0 0 8px;font-size:12.5px;">Contraseña actualizada.</p>
+      <p class="error oculto" id="clave-error" style="color:var(--rojo-600);background:var(--rojo-50);padding:8px 12px;border-radius:var(--radio-sm);font-size:12px;margin:0 0 10px;"></p>
+      <p class="ok oculto" id="clave-ok" style="color:var(--verde-700);background:var(--verde-50);padding:8px 12px;border-radius:var(--radio-sm);font-size:12px;margin:0 0 10px;">Contraseña actualizada correctamente.</p>
       <div class="acciones">
         <button type="button" class="secundario" id="clave-cancelar">Cancelar</button>
-        <button type="submit" id="clave-guardar">Guardar</button>
+        <button type="submit" id="clave-guardar">Actualizar</button>
       </div>
     </form>
   </div>
@@ -442,26 +674,17 @@
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-// ---------------------------------------------------------------
-// CONFIGURA AQUÍ tu proyecto (clave publicable = segura para el navegador,
-// la seguridad real la da RLS en la base de datos, no esta clave).
 const SUPABASE_URL = 'https://tgvcvnhrwswuxgjbpvwq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_EKV8OM1y96u-DV_kUPGwkg_BZuGdf4D';
-// ---------------------------------------------------------------
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let usuarioActual = null;   // fila de usuarios_panel
+let usuarioActual = null;
 let esAdmin = false;
-let misPermisos = {};   // { pedidos_envios:'editar'|'lectura'|'sin_acceso', ... } — solo aplica a no-admins
+let misPermisos = {};
 let vistaActual = 'clientes';
-let filasCache = [];        // filas de la vista genérica actual (para editar/buscar)
+let filasCache = [];
 
-/* =========================================================
-   DEFINICIÓN DE TABLAS
-   columnas: {clave, etiqueta, tipo, listado(bool), opciones(array)}
-   tipo: text | textarea | number | date | select | readonly
-   ========================================================= */
 const TABLAS = {
   clientes: {
     etiqueta: 'Clientes', pk: 'usuario_id', autoPk: false,
@@ -674,7 +897,7 @@ document.getElementById('form-login').addEventListener('submit', async (e)=>{
   err.classList.add('oculto');
   btn.disabled = true; btn.textContent = 'Entrando…';
   const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-  btn.disabled = false; btn.textContent = 'Entrar';
+  btn.disabled = false; btn.textContent = 'Iniciar sesión';
   if (error){
     err.textContent = error.message === 'Invalid login credentials'
       ? 'Correo o contraseña incorrectos.' : error.message;
@@ -687,7 +910,6 @@ document.getElementById('btn-salir').addEventListener('click', async ()=>{
   location.reload();
 });
 
-/* ---- Olvidé mi contraseña (desde login) ---- */
 document.getElementById('btn-mostrar-olvide').addEventListener('click', ()=>{
   document.getElementById('form-olvide').classList.remove('oculto');
   document.getElementById('btn-mostrar-olvide').parentElement.classList.add('oculto');
@@ -716,7 +938,6 @@ document.getElementById('form-olvide').addEventListener('submit', async (e)=>{
   ok.classList.remove('oculto');
 });
 
-/* ---- Definir nueva contraseña (llega desde el enlace del correo) ---- */
 document.getElementById('form-recuperar').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const p1 = document.getElementById('recuperar-pass1').value;
@@ -741,7 +962,6 @@ document.getElementById('form-recuperar').addEventListener('submit', async (e)=>
   iniciarSesionSiCorresponde();
 });
 
-/* ---- Cambiar mi contraseña (ya dentro del panel) ---- */
 document.getElementById('btn-cambiar-clave').addEventListener('click', ()=>{
   document.getElementById('clave-nueva1').value = '';
   document.getElementById('clave-nueva2').value = '';
@@ -818,14 +1038,17 @@ function mostrarLogin(){
 function mostrarApp(){
   document.getElementById('vista-login').style.display = 'none';
   document.getElementById('app').classList.add('activo');
-  document.getElementById('pie-nombre').textContent = usuarioActual.nombre || usuarioActual.email;
+  
+  const nombreMostrado = usuarioActual.nombre || usuarioActual.email;
+  document.getElementById('pie-nombre').textContent = nombreMostrado;
+  document.getElementById('pie-avatar').textContent = (nombreMostrado.charAt(0) || 'U').toUpperCase();
   document.getElementById('pie-rol').textContent = esAdmin ? 'Admin' : 'Usuario';
+
   if (esAdmin){
     document.getElementById('sep-admin').classList.remove('oculto');
     document.getElementById('nav-usuarios').classList.remove('oculto');
     document.getElementById('nav-permisos').classList.remove('oculto');
   } else {
-    // Oculta del menú las áreas donde este usuario no tiene ni siquiera lectura
     Object.keys(TABLAS).forEach(vista=>{
       const t = TABLAS[vista];
       if (t.area && misPermisos[t.area] === 'sin_acceso'){
@@ -893,7 +1116,7 @@ async function cargarVista(vista){
   const t = TABLAS[vista];
   if (!puedeVer(vista)) return mostrarSinAcceso(t.etiqueta);
   document.getElementById('titulo-vista').textContent = t.etiqueta;
-  document.getElementById('subtitulo-vista').textContent = 'Cargando…';
+  document.getElementById('subtitulo-vista').textContent = 'Cargando registros…';
   document.getElementById('contenido-vista').innerHTML = '<div class="cargando">Cargando datos…</div>';
 
   if (puedeEditar(vista)){
@@ -903,7 +1126,6 @@ async function cargarVista(vista){
     document.getElementById('acciones-vista').appendChild(btnNuevo);
   }
 
-  const orden = t.columnas.find(c=>c.clave.includes('fecha') || c.clave.includes('creado')) ;
   let query = sb.from(vista).select('*').limit(500);
   const { data, error } = await query;
   if (error){
@@ -911,7 +1133,7 @@ async function cargarVista(vista){
     return;
   }
   filasCache = data || [];
-  document.getElementById('subtitulo-vista').textContent = `${filasCache.length} registro(s)`;
+  document.getElementById('subtitulo-vista').textContent = `${filasCache.length} registro(s) encontrado(s)`;
   renderTabla(vista, filasCache);
 }
 
@@ -923,12 +1145,12 @@ function renderTabla(vista, filas){
   let html = `
     <div class="panel-tabla">
       <div class="barra">
-        <input type="search" placeholder="Buscar…" id="buscador-tabla">
+        <input type="search" placeholder="🔍  Buscar en esta tabla…" id="buscador-tabla">
       </div>
       <div style="overflow-x:auto;">
       <table class="datos"><thead><tr>`;
   colsMostrar.forEach(c=> html += `<th>${c.etiqueta}</th>`);
-  if (puedeEditar(vista)) html += `<th></th>`;
+  if (puedeEditar(vista)) html += `<th style="text-align:right;">Acciones</th>`;
   html += `</tr></thead><tbody id="cuerpo-tabla"></tbody></table></div></div>`;
   document.getElementById('contenido-vista').innerHTML = html;
 
@@ -941,7 +1163,7 @@ function renderTabla(vista, filas){
     cuerpo.innerHTML = lista.map(fila=>{
       let tds = colsMostrar.map(c=>`<td title="${escapeHtml(String(fila[c.clave] ?? ''))}">${formatoCelda(fila[c.clave], c)}</td>`).join('');
       if (puedeEditar(vista)){
-        tds += `<td><button class="secundario" style="padding:4px 10px;" onclick="window.__editarFila('${vista}','${fila[t.pk]}')">Editar</button></td>`;
+        tds += `<td style="text-align:right;"><button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__editarFila('${vista}','${fila[t.pk]}')">Editar</button></td>`;
       }
       return `<tr>${tds}</tr>`;
     }).join('');
@@ -956,12 +1178,18 @@ function renderTabla(vista, filas){
 }
 
 function formatoCelda(valor, columna){
-  if (valor === null || valor === undefined || valor === '') return '<span style="color:#c3bda8;">—</span>';
-  if (columna.clave.includes('estado')){
+  if (valor === null || valor === undefined || valor === '') return '<span style="color:#b4c0b7;">—</span>';
+  
+  // Truncar visualmente UUIDs de 36 caracteres para que la tabla no se ensanche de forma molesta
+  if (typeof valor === 'string' && valor.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)){
+    return `<span class="mono-id" title="${valor}">${valor.slice(0,8)}...${valor.slice(-4)}</span>`;
+  }
+
+  if (columna.clave.includes('estado') || columna.clave === 'rol'){
     const v = String(valor).toLowerCase();
     let clase = 'gris';
-    if (['disponible','pagado','verificado','activo'].includes(v)) clase='verde';
-    else if (['pendiente','parcial','en lote'].includes(v)) clase='ocre';
+    if (['disponible','pagado','verificado','activo','admin'].includes(v)) clase='verde';
+    else if (['pendiente','parcial','en lote','lectura'].includes(v)) clase='ocre';
     else if (['no disponible','rechazado','cancelado'].includes(v)) clase='rojo';
     return `<span class="chip ${clase}">${escapeHtml(String(valor))}</span>`;
   }
@@ -976,14 +1204,14 @@ function escapeHtml(s){
 function puedeEditar(vista){
   if (esAdmin) return true;
   const t = TABLAS[vista];
-  if (!t || !t.area) return false; // tablas sin área propia: solo admin edita
+  if (!t || !t.area) return false;
   return misPermisos[t.area] === 'editar';
 }
 
 function puedeVer(vista){
   if (esAdmin) return true;
   const t = TABLAS[vista];
-  if (!t || !t.area) return true; // sin área propia: visible para cualquiera con cuenta (RLS lo respalda)
+  if (!t || !t.area) return true;
   return misPermisos[t.area] !== 'sin_acceso';
 }
 
@@ -1091,7 +1319,7 @@ document.getElementById('modal-eliminar').onclick = async ()=>{
 /* =========================================================
    PAGOS MASIVOS (lotes)
    ========================================================= */
-let subvistaLotes = 'nuevo'; // 'nuevo' | 'historial'
+let subvistaLotes = 'nuevo';
 let seleccionComisiones = new Set();
 let filtroDesde = '';
 let filtroHasta = '';
@@ -1117,9 +1345,9 @@ function barraFiltroFechas(){
   return `
     <div class="panel-tabla" style="margin-bottom:16px;">
       <div class="barra" style="flex-wrap:wrap;gap:12px;">
-        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-          <div><label>Comisiones generadas desde</label><input type="date" id="filtro-desde" value="${filtroDesde}"></div>
-          <div><label>hasta</label><input type="date" id="filtro-hasta" value="${filtroHasta}"></div>
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+          <div><label>Desde</label><input type="date" id="filtro-desde" value="${filtroDesde}"></div>
+          <div><label>Hasta</label><input type="date" id="filtro-hasta" value="${filtroHasta}"></div>
           <button class="secundario" id="btn-primeros5" type="button">Primeros 5 días del mes</button>
           <button class="secundario" id="btn-ver-todas" type="button">Ver todas las pendientes</button>
         </div>
@@ -1164,13 +1392,13 @@ async function renderComisionesPendientes(){
   });
 
   const totalGeneral = comisiones.reduce((s,c)=>s+Number(c.monto_comision||0),0);
-  seleccionComisiones = new Set(comisiones.map(c=>c.comision_id)); // preseleccionar todo
+  seleccionComisiones = new Set(comisiones.map(c=>c.comision_id));
 
   let html = barraFiltroFechas() + `
     <div class="tarjetas-resumen">
-      <div class="tarjeta"><div class="num">${comisiones.length}</div><div class="etq">comisiones en el rango</div></div>
-      <div class="tarjeta"><div class="num">${Object.keys(porAfiliado).length}</div><div class="etq">afiliados involucrados</div></div>
-      <div class="tarjeta"><div class="num">$${totalGeneral.toFixed(2)}</div><div class="etq">monto total del rango</div></div>
+      <div class="tarjeta"><div class="num">${comisiones.length}</div><div class="etq">Comisiones en rango</div></div>
+      <div class="tarjeta"><div class="num">${Object.keys(porAfiliado).length}</div><div class="etq">Afiliados involucrados</div></div>
+      <div class="tarjeta"><div class="num">$${totalGeneral.toFixed(2)}</div><div class="etq">Monto total del rango</div></div>
     </div>`;
 
   if (!puedeGestionarPagos){
@@ -1184,11 +1412,11 @@ async function renderComisionesPendientes(){
       <div class="grupo-afiliado">
         <div class="cab">
           <div>
-            <strong>${escapeHtml(afId)}</strong> · ${escapeHtml(info.codigo_propio||'')}
-            <div style="font-size:11.5px;color:#8a8570;">${escapeHtml(info.metodo_pago_preferido||'Sin método de pago registrado')}</div>
+            <strong>${escapeHtml(afId)}</strong> · <span style="color:var(--tinta-suave);">${escapeHtml(info.codigo_propio||'')}</span>
+            <div style="font-size:12px;color:var(--tinta-suave);">${escapeHtml(info.metodo_pago_preferido||'Sin método de pago registrado')}</div>
           </div>
           <div style="text-align:right;">
-            <label style="display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--verde-900);">
+            <label style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--verde-950);font-size:14px;cursor:pointer;">
               <input type="checkbox" class="chk-afiliado" data-afiliado="${afId}" checked ${puedeGestionarPagos?'':'disabled'}>
               $${subtotal.toFixed(2)}
             </label>
@@ -1197,9 +1425,9 @@ async function renderComisionesPendientes(){
         <div class="cuerpo">
           ${lista.map(c=>`
             <div class="fila-comision">
-              <span>Compra ${escapeHtml(c.compra_id)} · Nivel ${c.nivel_afiliacion}</span>
+              <span>Compra <strong>${escapeHtml(c.compra_id)}</strong> · Nivel ${c.nivel_afiliacion}</span>
               <span>
-                <label style="display:inline-flex;align-items:center;gap:6px;">
+                <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
                   <input type="checkbox" class="chk-comision" data-comision="${c.comision_id}" data-afiliado="${afId}" checked ${puedeGestionarPagos?'':'disabled'}>
                   $${Number(c.monto_comision||0).toFixed(2)}
                 </label>
@@ -1210,7 +1438,7 @@ async function renderComisionesPendientes(){
   }).join('');
 
   if (puedeGestionarPagos){
-    html += `<button id="btn-crear-lote" style="margin-top:6px;">Crear lote con seleccionados</button>`;
+    html += `<button id="btn-crear-lote" style="margin-top:12px;">Crear lote con seleccionados</button>`;
   }
 
   document.getElementById('cuerpo-pagos-masivos').innerHTML = html;
@@ -1237,14 +1465,12 @@ async function crearLote(todasLasComisiones){
   const comisionesSel = todasLasComisiones.filter(c=>seleccionadas.includes(c.comision_id));
   const totalLote = comisionesSel.reduce((s,c)=>s+Number(c.monto_comision||0),0);
 
-  // 1) crear el lote
   const { data: lote, error: errLote } = await sb
     .from('lotes_pago')
     .insert({ creado_por: usuarioActual.id, monto_total: totalLote, estado:'Pendiente' })
     .select().single();
   if (errLote){ alert('No se pudo crear el lote: ' + errLote.message); btn.disabled=false; btn.textContent='Crear lote con seleccionados'; return; }
 
-  // 2) agrupar por afiliado para el detalle
   const porAfiliado = {};
   comisionesSel.forEach(c=>{ (porAfiliado[c.afiliado_id] ||= []).push(c); });
   const filasDetalle = Object.entries(porAfiliado).map(([afId, lista])=>({
@@ -1255,7 +1481,6 @@ async function crearLote(todasLasComisiones){
   const { error: errDetalle } = await sb.from('lotes_pago_detalle').insert(filasDetalle);
   if (errDetalle){ alert('El lote se creó pero falló el detalle: ' + errDetalle.message); }
 
-  // 3) marcar las comisiones como "En Lote" y vincularlas
   const { error: errComis } = await sb
     .from('comisiones')
     .update({ estado_comision:'En Lote', lote_pago_id: lote.lote_id })
@@ -1276,12 +1501,12 @@ async function renderHistorialLotes(){
     <div class="grupo-afiliado" data-lote="${l.lote_id}">
       <div class="cab" onclick="window.__toggleLote('${l.lote_id}')">
         <div>
-          <strong>${l.lote_id}</strong>
-          <div style="font-size:11.5px;color:#8a8570;">${new Date(l.fecha_creado).toLocaleString('es-VE',{dateStyle:'medium',timeStyle:'short'})}</div>
+          <strong class="mono-id">${l.lote_id}</strong>
+          <div style="font-size:12px;color:var(--tinta-suave);margin-top:2px;">${new Date(l.fecha_creado).toLocaleString('es-VE',{dateStyle:'medium',timeStyle:'short'})}</div>
         </div>
         <div style="text-align:right;">
           <span class="chip ${l.estado==='Pagado'?'verde':(l.estado==='Parcial'?'ocre':'gris')}">${l.estado}</span>
-          <div style="font-weight:700;color:var(--verde-900);">$${Number(l.monto_total||0).toFixed(2)}</div>
+          <div style="font-weight:700;color:var(--verde-950);font-size:14px;margin-top:3px;">$${Number(l.monto_total||0).toFixed(2)}</div>
         </div>
       </div>
       <div class="cuerpo oculto" id="detalle-${l.lote_id}"></div>
@@ -1302,7 +1527,7 @@ window.__toggleLote = async (loteId)=>{
 
   const puedeGestionarPagos = puedeEditar('comisiones');
   cont.innerHTML = `
-    <div class="fila-lote-detalle" style="font-weight:600;color:var(--verde-700);font-size:11.5px;">
+    <div class="fila-lote-detalle" style="font-weight:700;color:var(--tinta-suave);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">
       <span>Afiliado</span><span>Método de pago</span><span>Referencia</span><span>Monto</span><span></span>
     </div>
     ${detalle.map(d=>`
@@ -1310,10 +1535,10 @@ window.__toggleLote = async (loteId)=>{
         <span>${escapeHtml(d.afiliado_id)}</span>
         <input type="text" placeholder="Ej: Pago móvil, Binance…" value="${escapeHtml(d.metodo_pago||'')}" data-campo="metodo_pago" ${(!puedeGestionarPagos||d.estado_pago==='Pagado')?'disabled':''}>
         <input type="text" placeholder="N° de referencia" value="${escapeHtml(d.referencia_pago||'')}" data-campo="referencia_pago" ${(!puedeGestionarPagos||d.estado_pago==='Pagado')?'disabled':''}>
-        <span>$${Number(d.monto_total||0).toFixed(2)}</span>
+        <span style="font-weight:600;">$${Number(d.monto_total||0).toFixed(2)}</span>
         ${puedeGestionarPagos ? (d.estado_pago==='Pagado'
             ? `<span class="chip verde">Pagado</span>`
-            : `<button style="padding:5px 10px;" onclick="window.__marcarPagado('${loteId}','${d.detalle_id}')">Marcar pagado</button>`)
+            : `<button style="padding:6px 12px;font-size:12px;" onclick="window.__marcarPagado('${loteId}','${d.detalle_id}')">Marcar pagado</button>`)
           : `<span class="chip ${d.estado_pago==='Pagado'?'verde':'ocre'}">${d.estado_pago}</span>`}
       </div>
     `).join('')}
@@ -1337,18 +1562,15 @@ window.__marcarPagado = async (loteId, detalleId)=>{
   }).eq('detalle_id', detalleId);
   if (errUpd){ alert('No se pudo marcar como pagado: ' + errUpd.message); return; }
 
-  // Actualiza las comisiones de ese afiliado dentro de este lote
   await sb.from('comisiones').update({ estado_comision:'Pagado', fecha_pago_comision: ahora })
     .eq('lote_pago_id', loteId).eq('afiliado_id', detalleActual.afiliado_id);
 
-  // Descuenta el saldo pendiente y actualiza fecha de último pago del afiliado
   const { data: afiliado } = await sb.from('afiliados').select('saldo_acumulado').eq('afiliado_id', detalleActual.afiliado_id).single();
   if (afiliado){
     const nuevoSaldo = Math.max(0, Number(afiliado.saldo_acumulado||0) - Number(detalleActual.monto_total||0));
     await sb.from('afiliados').update({ saldo_acumulado: nuevoSaldo, fecha_ultimo_pago: ahora }).eq('afiliado_id', detalleActual.afiliado_id);
   }
 
-  // Revisa si todo el lote quedó pagado, para actualizar su estado
   const { data: todoDetalle } = await sb.from('lotes_pago_detalle').select('estado_pago').eq('lote_id', loteId);
   const todosPagados = todoDetalle.every(d=>d.estado_pago==='Pagado');
   const algunoPagado = todoDetalle.some(d=>d.estado_pago==='Pagado');
@@ -1357,8 +1579,8 @@ window.__marcarPagado = async (loteId, detalleId)=>{
     fecha_pago: todosPagados ? ahora : null
   }).eq('lote_id', loteId);
 
-  window.__toggleLote(loteId); // recarga (cierra)
-  window.__toggleLote(loteId); // vuelve a abrir con datos frescos
+  window.__toggleLote(loteId);
+  window.__toggleLote(loteId);
 };
 
 /* =========================================================
@@ -1394,10 +1616,10 @@ async function renderEnvios(){
   const barra = `
     <div class="panel-tabla" style="margin-bottom:16px;">
       <div class="barra" style="flex-wrap:wrap;gap:12px;">
-        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-          <div><label>Fecha</label><input type="date" id="fecha-envios" value="${fechaEnvios}"></div>
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+          <div><label>Fecha de consulta</label><input type="date" id="fecha-envios" value="${fechaEnvios}"></div>
           <button class="secundario" id="btn-hoy-envios" type="button">Hoy</button>
-          <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--tinta);margin-bottom:2px;">
+          <label style="display:flex;align-items:center;gap:6px;font-weight:500;color:var(--tinta);margin-bottom:6px;cursor:pointer;">
             <input type="checkbox" id="chk-solo-pendientes" ${soloPendientesEnvio?'checked':''}> Solo pendientes de envío
           </label>
         </div>
@@ -1412,9 +1634,9 @@ async function renderEnvios(){
 
   cont.innerHTML = barra + `
     <div class="tarjetas-resumen">
-      <div class="tarjeta"><div class="num">${(compras||[]).length}</div><div class="etq">ventas del día</div></div>
-      <div class="tarjeta"><div class="num">${(compras||[]).filter(c=>c.estado_envio==='Pendiente').length}</div><div class="etq">pendientes de envío</div></div>
-      <div class="tarjeta"><div class="num">$${(compras||[]).reduce((s,c)=>s+Number(c.monto||0),0).toFixed(2)}</div><div class="etq">monto vendido</div></div>
+      <div class="tarjeta"><div class="num">${(compras||[]).length}</div><div class="etq">Ventas del día</div></div>
+      <div class="tarjeta"><div class="num">${(compras||[]).filter(c=>c.estado_envio==='Pendiente').length}</div><div class="etq">Pendientes de envío</div></div>
+      <div class="tarjeta"><div class="num">$${(compras||[]).reduce((s,c)=>s+Number(c.monto||0),0).toFixed(2)}</div><div class="etq">Monto vendido</div></div>
     </div>
   ` + lista.map(c=>{
     const cli = mapaClientes[c.usuario_id] || {};
@@ -1423,24 +1645,25 @@ async function renderEnvios(){
     const enviado = c.estado_envio === 'Enviado';
     return `
       <div class="grupo-afiliado" data-compra="${c.compra_id}">
-        <div class="cuerpo" style="padding-top:14px;">
-          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        <div class="cuerpo" style="padding-top:16px;">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
             <div>
-              <strong>${escapeHtml(nombreCliente)}</strong> · ${escapeHtml(c.producto_id||'')}
-              <div style="font-size:11.5px;color:#8a8570;">${escapeHtml(c.ciudad_envio||'Sin ciudad')} · ${escapeHtml(c.oficina_envio||'Sin oficina de envío')}</div>
+              <div style="font-size:15px;font-weight:700;color:var(--verde-950);">${escapeHtml(nombreCliente)}</div>
+              <div style="font-size:13px;color:var(--tinta);">${escapeHtml(c.producto_id||'')}</div>
+              <div style="font-size:12px;color:var(--tinta-suave);margin-top:2px;">${escapeHtml(c.ciudad_envio||'Sin ciudad')} · ${escapeHtml(c.oficina_envio||'Sin oficina de envío')}</div>
             </div>
             <div style="text-align:right;">
-              <div style="font-weight:700;color:var(--verde-900);">$${Number(c.monto||0).toFixed(2)}</div>
-              <span class="chip ${enviado?'verde':'ocre'}">${c.estado_envio}</span>
+              <div style="font-weight:700;color:var(--verde-950);font-size:16px;">$${Number(c.monto||0).toFixed(2)}</div>
+              <span class="chip ${enviado?'verde':'ocre'}" style="margin-top:4px;">${c.estado_envio}</span>
             </div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            ${telefono ? `<a href="https://wa.me/${telefono}" target="_blank"><button type="button" class="secundario">WhatsApp al cliente</button></a>` : ''}
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-top:8px;border-top:1px solid var(--borde-suave);">
+            ${telefono ? `<a href="https://wa.me/${telefono}" target="_blank"><button type="button" class="secundario" style="font-size:12px;padding:6px 12px;">💬 WhatsApp al cliente</button></a>` : ''}
             ${enviado
-              ? `<span style="font-size:12.5px;color:#8a8570;">Guía: <strong>${escapeHtml(c.numero_guia||'—')}</strong> · ${c.fecha_envio ? new Date(c.fecha_envio).toLocaleDateString('es-VE') : ''}</span>`
+              ? `<span style="font-size:12.5px;color:var(--tinta-suave);">Guía: <strong style="color:var(--tinta);">${escapeHtml(c.numero_guia||'—')}</strong> · ${c.fecha_envio ? new Date(c.fecha_envio).toLocaleDateString('es-VE') : ''}</span>`
               : (puedeGestionarEnvios ? `
-                <input type="text" placeholder="N° de guía" id="guia-${c.compra_id}" style="max-width:160px;">
-                <button type="button" onclick="window.__marcarEnviado('${c.compra_id}')">Marcar enviado</button>
+                <input type="text" placeholder="N° de guía" id="guia-${c.compra_id}" style="max-width:180px;padding:6px 10px;font-size:12px;">
+                <button type="button" style="font-size:12px;padding:6px 14px;" onclick="window.__marcarEnviado('${c.compra_id}')">Marcar enviado</button>
               ` : '')}
           </div>
         </div>
@@ -1468,7 +1691,7 @@ window.__marcarEnviado = async (compraId)=>{
 };
 
 /* =========================================================
-   PERMISOS POR ÁREA (solo admin)
+   PERMISOS POR ÁREA
    ========================================================= */
 const AREAS_PERMISO = [
   { clave:'pedidos_envios', etiqueta:'Pedidos y envíos' },
@@ -1490,7 +1713,7 @@ async function renderPermisosArea(){
     return;
   }
 
-  const mapa = {}; // usuario_id -> { area: nivel }
+  const mapa = {};
   (permisos||[]).forEach(p=>{
     mapa[p.usuario_id] = mapa[p.usuario_id] || {};
     mapa[p.usuario_id][p.area] = p.nivel;
@@ -1507,15 +1730,15 @@ async function renderPermisosArea(){
         ${(usuarios||[]).map(u=>{
           if (u.rol === 'admin'){
             return `<tr>
-              <td><strong>${escapeHtml(u.nombre||u.email)}</strong><div style="font-size:11px;color:#8a8570;">${escapeHtml(u.email)}</div></td>
-              <td colspan="${AREAS_PERMISO.length}" style="color:#8a8570;">Acceso total (administrador)</td>
+              <td><strong>${escapeHtml(u.nombre||u.email)}</strong><div style="font-size:11px;color:var(--tinta-suave);">${escapeHtml(u.email)}</div></td>
+              <td colspan="${AREAS_PERMISO.length}"><span class="chip verde">Acceso total (administrador)</span></td>
             </tr>`;
           }
           return `<tr>
-            <td><strong>${escapeHtml(u.nombre||u.email)}</strong><div style="font-size:11px;color:#8a8570;">${escapeHtml(u.email)}</div></td>
+            <td><strong>${escapeHtml(u.nombre||u.email)}</strong><div style="font-size:11px;color:var(--tinta-suave);">${escapeHtml(u.email)}</div></td>
             ${AREAS_PERMISO.map(a=>{
               const nivel = (mapa[u.id] && mapa[u.id][a.clave]) || 'lectura';
-              return `<td><select data-usuario="${u.id}" data-area="${a.clave}" class="sel-permiso">
+              return `<td><select data-usuario="${u.id}" data-area="${a.clave}" class="sel-permiso" style="padding:4px 8px;font-size:12px;">
                 <option value="editar" ${nivel==='editar'?'selected':''}>Puede editar</option>
                 <option value="lectura" ${nivel==='lectura'?'selected':''}>Solo lectura</option>
                 <option value="sin_acceso" ${nivel==='sin_acceso'?'selected':''}>Sin acceso</option>
@@ -1550,11 +1773,6 @@ let graficosActivos = [];
 function destruirGraficos(){
   graficosActivos.forEach(g=>g.destroy());
   graficosActivos = [];
-}
-
-function nombreMes(fechaISO){
-  const d = new Date(fechaISO);
-  return d.toLocaleDateString('es-VE', { month:'short', year:'2-digit' });
 }
 
 function ultimosNMeses(n){
@@ -1607,10 +1825,10 @@ async function renderDashboard(){
 
   cont.innerHTML = `
     <div class="tarjetas-resumen">
-      <div class="tarjeta"><div class="num">$${totalVentas.toFixed(2)}</div><div class="etq">ventas totales registradas</div></div>
-      <div class="tarjeta"><div class="num">${(compras||[]).length}</div><div class="etq">compras totales</div></div>
-      <div class="tarjeta"><div class="num">$${totalComisiones.toFixed(2)}</div><div class="etq">comisiones generadas en total</div></div>
-      <div class="tarjeta"><div class="num">${(clientes||[]).length}</div><div class="etq">clientes registrados</div></div>
+      <div class="tarjeta"><div class="num">$${totalVentas.toFixed(2)}</div><div class="etq">Ventas totales registradas</div></div>
+      <div class="tarjeta"><div class="num">${(compras||[]).length}</div><div class="etq">Compras totales</div></div>
+      <div class="tarjeta"><div class="num">$${totalComisiones.toFixed(2)}</div><div class="etq">Comisiones generadas</div></div>
+      <div class="tarjeta"><div class="num">${(clientes||[]).length}</div><div class="etq">Clientes registrados</div></div>
     </div>
     <div class="rejilla-dashboard">
       <div class="tarjeta-grafico ancho"><h4>Evolución de ventas (últimos 12 meses)</h4><canvas id="g-ventas-mes"></canvas></div>
@@ -1621,34 +1839,34 @@ async function renderDashboard(){
     </div>
   `;
 
-  const colores = ['#2f5140','#4a7a63','#b8863f','#9c6f2f','#a33b3b','#8a8570'];
+  const colores = ['#2d503e','#528c6e','#d49741','#9c6f2f','#c23e3e','#8fa896'];
 
   graficosActivos.push(new Chart(document.getElementById('g-ventas-mes'), {
     type:'line',
-    data:{ labels: meses.map(m=>m.etiqueta), datasets:[{ label:'Ventas ($)', data:ventasPorMes, borderColor:'#2f5140', backgroundColor:'rgba(47,81,64,.12)', fill:true, tension:.3 }] },
+    data:{ labels: meses.map(m=>m.etiqueta), datasets:[{ label:'Ventas ($)', data:ventasPorMes, borderColor:'#2d503e', backgroundColor:'rgba(45,80,62,0.08)', fill:true, tension:.3, borderWidth:2 }] },
     options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
   }));
 
   graficosActivos.push(new Chart(document.getElementById('g-tipo'), {
     type:'doughnut',
-    data:{ labels:['Productos','Eventos'], datasets:[{ data:[ventasPorTipo.producto||0, ventasPorTipo.evento||0], backgroundColor:['#2f5140','#b8863f'] }] },
+    data:{ labels:['Productos','Eventos'], datasets:[{ data:[ventasPorTipo.producto||0, ventasPorTipo.evento||0], backgroundColor:['#2d503e','#d49741'], borderWidth:0 }] },
   }));
 
   const estadosComision = Object.keys(comisionesPorEstado);
   graficosActivos.push(new Chart(document.getElementById('g-comisiones'), {
     type:'pie',
-    data:{ labels: estadosComision, datasets:[{ data: estadosComision.map(k=>comisionesPorEstado[k]), backgroundColor: colores }] },
+    data:{ labels: estadosComision, datasets:[{ data: estadosComision.map(k=>comisionesPorEstado[k]), backgroundColor: colores, borderWidth:0 }] },
   }));
 
   graficosActivos.push(new Chart(document.getElementById('g-clientes-mes'), {
     type:'bar',
-    data:{ labels: meses.map(m=>m.etiqueta), datasets:[{ label:'Clientes nuevos', data:clientesPorMes, backgroundColor:'#4a7a63' }] },
+    data:{ labels: meses.map(m=>m.etiqueta), datasets:[{ label:'Clientes nuevos', data:clientesPorMes, backgroundColor:'#528c6e', borderRadius:4 }] },
     options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
   }));
 
   graficosActivos.push(new Chart(document.getElementById('g-afiliados'), {
     type:'bar',
-    data:{ labels: (afiliados||[]).map(a=>a.afiliado_id), datasets:[{ label:'Ventas referidas', data:(afiliados||[]).map(a=>Number(a.ventas_referidas_totales||0)), backgroundColor:'#9c6f2f' }] },
+    data:{ labels: (afiliados||[]).map(a=>a.afiliado_id), datasets:[{ label:'Ventas referidas', data:(afiliados||[]).map(a=>Number(a.ventas_referidas_totales||0)), backgroundColor:'#9c6f2f', borderRadius:4 }] },
     options:{ indexAxis:'y', plugins:{legend:{display:false}} }
   }));
 }
