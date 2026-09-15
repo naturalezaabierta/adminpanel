@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Naturaleza Abierta · Valentina</title>
+<style>
+  :root{
+    --verde-900:#1f3327;
+    --verde-700:#2f5140;
+    --verde-500:#4a7a63;
+    --verde-200:#c9dccf;
+    --arena-50:#f7f4ee;
+    --arena-100:#efe9dd;
+    --ocre-500:#b8863f;
+    --ocre-600:#9c6f2f;
+    --rojo-600:#a33b3b;
+    --tinta:#20241f;
+    --borde:#dcd5c4;
+    --radio:6px;
+    font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--arena-50);
+    color:var(--tinta);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size:14px;
+  }
+  h1,h2,h3{
+    font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+    color:var(--verde-900);
+    font-weight:600;
+    margin:0 0 4px 0;
+  }
+  a{color:var(--verde-700);}
+  button{
+    font-family:inherit;
+    cursor:pointer;
+    border:1px solid var(--verde-700);
+    background:var(--verde-700);
+    color:#fff;
+    padding:8px 14px;
+    border-radius:var(--radio);
+    font-size:13px;
+    transition:background .15s ease;
+  }
+  button:hover{background:var(--verde-900);}
+  button.secundario{
+    background:transparent;
+    color:var(--verde-700);
+  }
+  button.secundario:hover{background:var(--verde-200);}
+  button.peligro{background:var(--rojo-600);border-color:var(--rojo-600);}
+  button.peligro:hover{background:#7e2c2c;}
+  button:disabled{opacity:.45;cursor:not-allowed;}
+  input,select,textarea{
+    font-family:inherit;
+    font-size:13px;
+    padding:7px 9px;
+    border:1px solid var(--borde);
+    border-radius:var(--radio);
+    background:#fff;
+    color:var(--tinta);
+    width:100%;
+  }
+  textarea{min-height:60px;resize:vertical;}
+  label{font-size:12px;color:var(--verde-700);font-weight:600;display:block;margin-bottom:3px;}
+
+  /* ---------- Login ---------- */
+  #vista-login{
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  .caja-login{
+    background:#fff;
+    border:1px solid var(--borde);
+    border-radius:10px;
+    padding:36px 32px;
+    width:100%;max-width:360px;
+    box-shadow:0 1px 3px rgba(31,51,39,.08);
+  }
+  .caja-login .campo{margin-bottom:14px;}
+  .caja-login p.error{color:var(--rojo-600);font-size:12.5px;margin:8px 0 0;}
+  .marca{
+    display:flex;align-items:center;gap:10px;margin-bottom:22px;
+  }
+  .marca .hoja{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(155deg,var(--verde-500),var(--verde-900));
+    flex-shrink:0;
+  }
+
+  /* ---------- Layout general ---------- */
+  #app{display:none;min-height:100vh;grid-template-columns:220px 1fr;}
+  #app.activo{display:grid;}
+  aside{
+    background:var(--verde-900);
+    color:var(--arena-100);
+    padding:22px 14px;
+    display:flex;flex-direction:column;
+  }
+  aside .marca{color:#fff;}
+  aside nav{flex:1;display:flex;flex-direction:column;gap:2px;margin-top:8px;}
+  aside nav button.enlace{
+    background:none;border:none;color:var(--arena-100);
+    text-align:left;padding:9px 10px;border-radius:var(--radio);
+    font-size:13px;opacity:.85;
+  }
+  aside nav button.enlace:hover{background:rgba(255,255,255,.08);opacity:1;}
+  aside nav button.enlace.activo{background:rgba(255,255,255,.14);opacity:1;font-weight:600;}
+  aside .separador{
+    text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;
+    color:var(--verde-200);opacity:.6;margin:16px 0 4px 10px;
+  }
+  aside .pie-usuario{
+    border-top:1px solid rgba(255,255,255,.15);
+    padding-top:12px;font-size:12px;opacity:.85;
+  }
+  aside .pie-usuario .rol{
+    display:inline-block;margin-top:4px;
+    background:var(--ocre-500);color:#fff;font-size:10.5px;
+    padding:1px 7px;border-radius:20px;
+  }
+  main{padding:26px 32px;overflow-x:auto;}
+  header.topbar{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    margin-bottom:20px;flex-wrap:wrap;gap:10px;
+  }
+  header.topbar p{color:var(--verde-700);margin:2px 0 0;font-size:13px;}
+
+  /* ---------- Tablas ---------- */
+  .panel-tabla{
+    background:#fff;border:1px solid var(--borde);border-radius:8px;overflow:hidden;
+  }
+  .panel-tabla .barra{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 16px;border-bottom:1px solid var(--borde);gap:10px;flex-wrap:wrap;
+  }
+  .panel-tabla .barra input[type="search"]{max-width:220px;}
+  table.datos{width:100%;border-collapse:collapse;font-size:12.8px;}
+  table.datos th{
+    text-align:left;background:var(--arena-100);color:var(--verde-900);
+    padding:8px 10px;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;
+    border-bottom:1px solid var(--borde);white-space:nowrap;
+  }
+  table.datos td{
+    padding:8px 10px;border-bottom:1px solid var(--arena-100);
+    max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  table.datos tbody tr:hover{background:var(--arena-50);}
+  .chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+  .chip.verde{background:#dcecdf;color:var(--verde-900);}
+  .chip.ocre{background:#f2e3c8;color:var(--ocre-600);}
+  .chip.rojo{background:#f3dcdc;color:var(--rojo-600);}
+  .chip.gris{background:#e6e2d6;color:#5c5747;}
+  .vacio{padding:40px 16px;text-align:center;color:#8a8570;}
+  .cargando{padding:40px 16px;text-align:center;color:var(--verde-700);}
+
+  /* ---------- Modal ---------- */
+  .fondo-modal{
+    display:none;position:fixed;inset:0;background:rgba(31,36,31,.45);
+    align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;z-index:50;
+  }
+  .fondo-modal.activo{display:flex;}
+  .modal{
+    background:#fff;border-radius:10px;max-width:560px;width:100%;
+    padding:26px 26px 22px;box-shadow:0 8px 30px rgba(0,0,0,.2);
+  }
+  .modal h3{margin-bottom:16px;}
+  .modal .rejilla{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;}
+  .modal .campo.ancho{grid-column:1/-1;}
+  .modal .acciones{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+
+  /* ---------- Pagos masivos ---------- */
+  .tarjetas-resumen{display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
+  .tarjeta{
+    background:#fff;border:1px solid var(--borde);border-radius:8px;
+    padding:14px 18px;min-width:150px;
+  }
+  .tarjeta .num{font-size:22px;font-weight:700;color:var(--verde-900);}
+  .tarjeta .etq{font-size:12px;color:#8a8570;}
+  .grupo-afiliado{
+    background:#fff;border:1px solid var(--borde);border-radius:8px;margin-bottom:12px;overflow:hidden;
+  }
+  .grupo-afiliado .cab{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:11px 15px;background:var(--arena-100);cursor:pointer;
+  }
+  .grupo-afiliado .cab strong{color:var(--verde-900);}
+  .grupo-afiliado .cuerpo{padding:0 15px;}
+  .fila-comision{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:9px 0;border-bottom:1px solid var(--arena-100);font-size:12.8px;
+  }
+  .fila-comision:last-child{border-bottom:none;}
+  .fila-lote-detalle{
+    display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr auto;gap:10px;align-items:center;
+    padding:11px 15px;border-bottom:1px solid var(--arena-100);
+  }
+  .fila-lote-detalle:last-child{border-bottom:none;}
+  .tab-lotes{display:flex;gap:8px;margin-bottom:16px;}
+  .tab-lotes button{background:transparent;color:var(--verde-700);}
+  .tab-lotes button.activo{background:var(--verde-700);color:#fff;}
+  .oculto{display:none !important;}
+  .rejilla-dashboard{
+    display:grid;grid-template-columns:1fr 1fr;gap:16px;
+  }
+  .rejilla-dashboard .tarjeta-grafico{
+    background:#fff;border:1px solid var(--borde);border-radius:8px;
+    padding:16px 18px;
+  }
+  .rejilla-dashboard .tarjeta-grafico.ancho{grid-column:1/-1;}
+  .rejilla-dashboard .tarjeta-grafico h4{
+    margin:0 0 10px;font-size:13px;color:var(--verde-900);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  .rejilla-dashboard canvas{max-height:260px;}
+  @media(max-width:820px){
+    .rejilla-dashboard{grid-template-columns:1fr;}
+  }
+  .msg-permiso{
+    background:#f2e3c8;color:var(--ocre-600);padding:10px 14px;border-radius:var(--radio);
+    font-size:12.5px;margin-bottom:14px;
+  }
+  @media(max-width:820px){
+    #app.activo{grid-template-columns:1fr;}
+    aside{flex-direction:row;overflow-x:auto;align-items:center;}
+    aside nav{flex-direction:row;margin-top:0;}
+    aside .separador{display:none;}
+    aside .pie-usuario{display:none;}
+    main{padding:18px;}
+    .modal .rejilla{grid-template-columns:1fr;}
+    .fila-lote-detalle{grid-template-columns:1fr;gap:6px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="vista-login">
+  <div class="caja-login">
+    <div class="marca">
+      <div class="hoja"></div>
+      <div>
+        <h1 style="font-size:17px;margin:0;">Naturaleza Abierta</h1>
+        <p style="margin:0;font-size:12px;color:#8a8570;">Panel de datos de Valentina</p>
+      </div>
+    </div>
+    <form id="form-login">
+      <div class="campo">
+        <label>Correo</label>
+        <input type="email" id="login-email" required autocomplete="username">
+      </div>
+      <div class="campo">
+        <label>Contraseña</label>
+        <input type="password" id="login-pass" required autocomplete="current-password">
+      </div>
+      <button type="submit" style="width:100%;" id="btn-login">Entrar</button>
+      <p class="error oculto" id="login-error"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <aside>
+    <div class="marca">
+      <div class="hoja"></div>
+      <div>
+        <div style="font-weight:700;">Naturaleza Abierta</div>
+        <div style="font-size:11px;opacity:.75;">Panel Valentina</div>
+      </div>
+    </div>
+    <nav id="nav-principal">
+      <button class="enlace" data-vista="dashboard">📊 Dashboard</button>
+      <div class="separador">Ventas y clientes</div>
+      <button class="enlace" data-vista="envios">Envíos del día</button>
+      <button class="enlace" data-vista="clientes">Clientes</button>
+      <button class="enlace" data-vista="compras">Compras</button>
+      <button class="enlace" data-vista="pagos">Pagos</button>
+
+      <div class="separador">Afiliados</div>
+      <button class="enlace" data-vista="afiliados">Afiliados</button>
+      <button class="enlace" data-vista="comisiones">Comisiones</button>
+      <button class="enlace" data-vista="pagosmasivos">Pagos masivos</button>
+
+      <div class="separador">Catálogo</div>
+      <button class="enlace" data-vista="productos_servicios">Productos y servicios</button>
+      <button class="enlace" data-vista="eventos_experiencias">Eventos y experiencias</button>
+
+      <div class="separador">Bot Valentina</div>
+      <button class="enlace" data-vista="respuestas_inteligentes">Respuestas</button>
+      <button class="enlace" data-vista="disparadores_venta">Disparadores de venta</button>
+      <button class="enlace" data-vista="creativos">Creativos</button>
+      <button class="enlace" data-vista="config">Configuración</button>
+
+      <div class="separador oculto" id="sep-admin">Administración</div>
+      <button class="enlace oculto" id="nav-usuarios" data-vista="usuarios_panel">Usuarios del panel</button>
+    </nav>
+    <div class="pie-usuario">
+      <div id="pie-nombre">—</div>
+      <span class="rol" id="pie-rol">…</span>
+      <div style="margin-top:10px;">
+        <button class="secundario" style="width:100%;color:var(--arena-100);border-color:rgba(255,255,255,.3);" id="btn-salir">Cerrar sesión</button>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <h2 id="titulo-vista">Clientes</h2>
+        <p id="subtitulo-vista">Cargando…</p>
+      </div>
+      <div id="acciones-vista"></div>
+    </header>
+    <div id="contenido-vista"></div>
+  </main>
+</div>
+
+<!-- ================= MODAL GENÉRICO (crear/editar fila) ================= -->
+<div class="fondo-modal" id="fondo-modal">
+  <div class="modal">
+    <h3 id="modal-titulo">Editar</h3>
+    <form id="form-modal">
+      <div class="rejilla" id="modal-campos"></div>
+      <p class="error oculto" id="modal-error" style="color:var(--rojo-600);margin-top:12px;"></p>
+      <div class="acciones">
+        <button type="button" class="secundario" id="modal-cancelar">Cancelar</button>
+        <button type="button" class="peligro oculto" id="modal-eliminar">Eliminar</button>
+        <button type="submit" id="modal-guardar">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// ---------------------------------------------------------------
+// CONFIGURA AQUÍ tu proyecto (clave publicable = segura para el navegador,
+// la seguridad real la da RLS en la base de datos, no esta clave).
+const SUPABASE_URL = 'https://tgvcvnhrwswuxgjbpvwq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_EKV8OM1y96u-DV_kUPGwkg_BZuGdf4D';
+// ---------------------------------------------------------------
+
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let usuarioActual = null;   // fila de usuarios_panel
+let esAdmin = false;
+let vistaActual = 'clientes';
+let filasCache = [];        // filas de la vista genérica actual (para editar/buscar)
+
+/* =========================================================
+   DEFINICIÓN DE TABLAS
+   columnas: {clave, etiqueta, tipo, listado(bool), opciones(array)}
+   tipo: text | textarea | number | date | select | readonly
+   ========================================================= */
+const TABLAS = {
+  clientes: {
+    etiqueta: 'Clientes', pk: 'usuario_id', autoPk: false,
+    columnas: [
+      {clave:'usuario_id', etiqueta:'ID usuario (teléfono)', tipo:'text', listado:true},
+      {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
+      {clave:'apellido', etiqueta:'Apellido', tipo:'text', listado:true},
+      {clave:'numero_cedula', etiqueta:'Cédula', tipo:'text'},
+      {clave:'telefono', etiqueta:'Teléfono', tipo:'text', listado:true},
+      {clave:'zona_estado_ciudad', etiqueta:'Zona / Estado / Ciudad', tipo:'text'},
+      {clave:'estado_cliente', etiqueta:'Estado del cliente', tipo:'text', listado:true},
+      {clave:'etapa_cliente', etiqueta:'Etapa', tipo:'text', listado:true},
+      {clave:'origen', etiqueta:'Origen', tipo:'text'},
+      {clave:'tipo_consulta', etiqueta:'Tipo de consulta', tipo:'text'},
+      {clave:'intencion', etiqueta:'Intención', tipo:'text'},
+      {clave:'producto_interes', etiqueta:'Producto de interés', tipo:'text'},
+      {clave:'prioridad', etiqueta:'Prioridad', tipo:'text'},
+      {clave:'responsable_caso', etiqueta:'Responsable del caso', tipo:'text'},
+      {clave:'ultimo_contacto', etiqueta:'Último contacto', tipo:'date'},
+      {clave:'proximo_seguimiento', etiqueta:'Próximo seguimiento', tipo:'date'},
+      {clave:'fecha_registro', etiqueta:'Registrado', tipo:'readonly', listado:true},
+    ]
+  },
+  afiliados: {
+    etiqueta: 'Afiliados', pk: 'afiliado_id', autoPk:false,
+    columnas: [
+      {clave:'afiliado_id', etiqueta:'ID afiliado', tipo:'text', listado:true},
+      {clave:'usuario_id', etiqueta:'ID de cliente vinculado', tipo:'text', listado:true},
+      {clave:'codigo_propio', etiqueta:'Código de referido', tipo:'text', listado:true},
+      {clave:'referido_por_usuario_id', etiqueta:'Referido por (usuario_id)', tipo:'text'},
+      {clave:'programa', etiqueta:'Programa', tipo:'text', listado:true},
+      {clave:'metodo_pago_preferido', etiqueta:'Método de pago preferido', tipo:'text'},
+      {clave:'datos_pago_cuenta', etiqueta:'Datos de la cuenta de pago', tipo:'textarea'},
+      {clave:'saldo_acumulado', etiqueta:'Saldo pendiente', tipo:'number', listado:true},
+      {clave:'ventas_referidas_totales', etiqueta:'Ventas referidas totales', tipo:'number', listado:true},
+      {clave:'fecha_ultimo_pago', etiqueta:'Último pago', tipo:'date', listado:true},
+    ]
+  },
+  compras: {
+    etiqueta: 'Compras', pk:'compra_id', autoPk:false,
+    columnas: [
+      {clave:'compra_id', etiqueta:'ID compra', tipo:'text', listado:true},
+      {clave:'usuario_id', etiqueta:'Cliente (usuario_id)', tipo:'text', listado:true},
+      {clave:'producto_id', etiqueta:'ID producto/evento', tipo:'text', listado:true},
+      {clave:'tipo_item', etiqueta:'Tipo', tipo:'select', opciones:['producto','evento'], listado:true},
+      {clave:'monto', etiqueta:'Monto', tipo:'number', listado:true},
+      {clave:'moneda', etiqueta:'Moneda', tipo:'text'},
+      {clave:'codigo_referido_usado', etiqueta:'Código de referido usado', tipo:'text'},
+      {clave:'afiliado_n1_id', etiqueta:'Afiliado nivel 1', tipo:'text'},
+      {clave:'afiliado_n2_id', etiqueta:'Afiliado nivel 2', tipo:'text'},
+      {clave:'afiliado_n3_id', etiqueta:'Afiliado nivel 3', tipo:'text'},
+      {clave:'estado_compra', etiqueta:'Estado', tipo:'text', listado:true},
+      {clave:'telefono_envio', etiqueta:'Teléfono de envío', tipo:'text'},
+      {clave:'oficina_envio', etiqueta:'Oficina de envío', tipo:'text'},
+      {clave:'ciudad_envio', etiqueta:'Ciudad de envío', tipo:'text'},
+      {clave:'estado_envio', etiqueta:'Estado de envío', tipo:'select', opciones:['Pendiente','Enviado','No Aplica'], listado:true},
+      {clave:'numero_guia', etiqueta:'Número de guía', tipo:'text', listado:true},
+      {clave:'fecha_envio', etiqueta:'Fecha de envío', tipo:'date'},
+      {clave:'fecha_compra', etiqueta:'Fecha', tipo:'readonly', listado:true},
+    ]
+  },
+  pagos: {
+    etiqueta:'Pagos', pk:'pago_id', autoPk:false,
+    columnas:[
+      {clave:'pago_id', etiqueta:'ID pago', tipo:'text', listado:true},
+      {clave:'compra_id', etiqueta:'Compra asociada', tipo:'text', listado:true},
+      {clave:'metodo_pago', etiqueta:'Método de pago', tipo:'text', listado:true},
+      {clave:'referencia_pago', etiqueta:'Referencia', tipo:'text', listado:true},
+      {clave:'monto_pagado', etiqueta:'Monto pagado', tipo:'number', listado:true},
+      {clave:'estado_pago', etiqueta:'Estado', tipo:'select', opciones:['Pendiente','Verificado','Rechazado'], listado:true},
+      {clave:'comprobante_url', etiqueta:'URL del comprobante', tipo:'text'},
+      {clave:'fecha_pago', etiqueta:'Fecha', tipo:'readonly', listado:true},
+    ]
+  },
+  comisiones: {
+    etiqueta:'Comisiones', pk:'comision_id', autoPk:false, soloLectura:true,
+    columnas:[
+      {clave:'comision_id', etiqueta:'ID comisión', tipo:'text', listado:true},
+      {clave:'compra_id', etiqueta:'Compra', tipo:'text', listado:true},
+      {clave:'afiliado_id', etiqueta:'Afiliado', tipo:'text', listado:true},
+      {clave:'nivel_afiliacion', etiqueta:'Nivel', tipo:'number', listado:true},
+      {clave:'monto_venta', etiqueta:'Monto de venta', tipo:'number', listado:true},
+      {clave:'porcentaje_comision', etiqueta:'% comisión', tipo:'number'},
+      {clave:'monto_comision', etiqueta:'Monto comisión', tipo:'number', listado:true},
+      {clave:'estado_comision', etiqueta:'Estado', tipo:'text', listado:true},
+      {clave:'lote_pago_id', etiqueta:'Lote de pago', tipo:'text', listado:true},
+      {clave:'fecha_generada', etiqueta:'Generada', tipo:'readonly', listado:true},
+      {clave:'fecha_pago_comision', etiqueta:'Pagada', tipo:'readonly', listado:true},
+    ]
+  },
+  productos_servicios: {
+    etiqueta:'Productos y servicios', pk:'id', autoPk:false,
+    columnas:[
+      {clave:'id', etiqueta:'ID', tipo:'text', listado:true},
+      {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
+      {clave:'categoria', etiqueta:'Categoría', tipo:'text', listado:true},
+      {clave:'estado', etiqueta:'Estado', tipo:'select', opciones:['Disponible','No Disponible'], listado:true},
+      {clave:'tipo_venta', etiqueta:'Tipo de venta', tipo:'text'},
+      {clave:'precio', etiqueta:'Precio', tipo:'number', listado:true},
+      {clave:'moneda', etiqueta:'Moneda', tipo:'text'},
+      {clave:'resumen_corto', etiqueta:'Resumen corto', tipo:'text'},
+      {clave:'descripcion', etiqueta:'Descripción', tipo:'textarea'},
+      {clave:'beneficios', etiqueta:'Beneficios', tipo:'textarea'},
+      {clave:'ideal_para', etiqueta:'Ideal para', tipo:'textarea'},
+      {clave:'incluye', etiqueta:'Incluye', tipo:'textarea'},
+      {clave:'disponibilidad', etiqueta:'Disponibilidad', tipo:'text'},
+      {clave:'fechas_y_lugares', etiqueta:'Fechas y lugares', tipo:'textarea'},
+      {clave:'flujo_de_venta', etiqueta:'Flujo de venta', tipo:'textarea'},
+      {clave:'enlace', etiqueta:'Enlace', tipo:'text'},
+      {clave:'proceso_post_compra', etiqueta:'Proceso post-compra', tipo:'textarea'},
+      {clave:'preguntas_frecuentes', etiqueta:'Preguntas frecuentes', tipo:'textarea'},
+      {clave:'objeciones_comunes', etiqueta:'Objeciones comunes', tipo:'textarea'},
+      {clave:'restricciones', etiqueta:'Restricciones', tipo:'textarea'},
+      {clave:'notas_internas', etiqueta:'Notas internas', tipo:'textarea'},
+      {clave:'comision_n1', etiqueta:'Comisión N1 (%)', tipo:'number'},
+      {clave:'comision_n2', etiqueta:'Comisión N2 (%)', tipo:'number'},
+      {clave:'comision_n3', etiqueta:'Comisión N3 (%)', tipo:'number'},
+      {clave:'imagen_url', etiqueta:'URL imagen', tipo:'text'},
+      {clave:'video_url', etiqueta:'URL video', tipo:'text'},
+    ]
+  },
+  eventos_experiencias: {
+    etiqueta:'Eventos y experiencias', pk:'id', autoPk:false,
+    columnas:[
+      {clave:'id', etiqueta:'ID', tipo:'text', listado:true},
+      {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
+      {clave:'categoria', etiqueta:'Categoría', tipo:'text', listado:true},
+      {clave:'estado', etiqueta:'Estado', tipo:'select', opciones:['Disponible','No Disponible'], listado:true},
+      {clave:'ciudad_estado', etiqueta:'Ciudad / Estado', tipo:'text', listado:true},
+      {clave:'fecha', etiqueta:'Fecha', tipo:'date', listado:true},
+      {clave:'hora', etiqueta:'Hora', tipo:'text'},
+      {clave:'cupos_disponibles', etiqueta:'Cupos disponibles', tipo:'number', listado:true},
+      {clave:'precio', etiqueta:'Precio', tipo:'number', listado:true},
+      {clave:'moneda', etiqueta:'Moneda', tipo:'text'},
+      {clave:'incluye', etiqueta:'Incluye', tipo:'textarea'},
+      {clave:'descripcion', etiqueta:'Descripción', tipo:'textarea'},
+      {clave:'beneficios', etiqueta:'Beneficios', tipo:'textarea'},
+      {clave:'ideal_para', etiqueta:'Ideal para', tipo:'textarea'},
+      {clave:'flujo_de_venta', etiqueta:'Flujo de venta', tipo:'textarea'},
+      {clave:'proceso_post_reserva', etiqueta:'Proceso post-reserva', tipo:'textarea'},
+      {clave:'preguntas_frecuentes', etiqueta:'Preguntas frecuentes', tipo:'textarea'},
+      {clave:'objeciones_comunes', etiqueta:'Objeciones comunes', tipo:'textarea'},
+      {clave:'restricciones', etiqueta:'Restricciones', tipo:'textarea'},
+      {clave:'notas_internas', etiqueta:'Notas internas', tipo:'textarea'},
+      {clave:'porcentaje_pago_requerido', etiqueta:'% de pago requerido (anticipo)', tipo:'number'},
+      {clave:'comision_n1', etiqueta:'Comisión N1 (%)', tipo:'number'},
+      {clave:'comision_n2', etiqueta:'Comisión N2 (%)', tipo:'number'},
+      {clave:'comision_n3', etiqueta:'Comisión N3 (%)', tipo:'number'},
+      {clave:'imagen_url', etiqueta:'URL imagen', tipo:'text'},
+      {clave:'video_url', etiqueta:'URL video', tipo:'text'},
+    ]
+  },
+  respuestas_inteligentes: {
+    etiqueta:'Respuestas inteligentes', pk:'id', autoPk:true,
+    columnas:[
+      {clave:'id', etiqueta:'ID', tipo:'readonly', listado:true},
+      {clave:'tema', etiqueta:'Tema', tipo:'text', listado:true},
+      {clave:'respuesta', etiqueta:'Respuesta', tipo:'textarea', listado:true},
+    ]
+  },
+  disparadores_venta: {
+    etiqueta:'Disparadores de venta', pk:'id', autoPk:true,
+    columnas:[
+      {clave:'id', etiqueta:'ID', tipo:'readonly', listado:true},
+      {clave:'frase_cliente', etiqueta:'Frase del cliente', tipo:'text', listado:true},
+      {clave:'producto_recomendado', etiqueta:'Producto recomendado', tipo:'text', listado:true},
+      {clave:'razon', etiqueta:'Razón', tipo:'textarea', listado:true},
+    ]
+  },
+  creativos: {
+    etiqueta:'Creativos', pk:'id', autoPk:true,
+    columnas:[
+      {clave:'id', etiqueta:'ID', tipo:'readonly', listado:true},
+      {clave:'producto', etiqueta:'Producto', tipo:'text', listado:true},
+      {clave:'formato', etiqueta:'Formato', tipo:'text', listado:true},
+      {clave:'imagen_url', etiqueta:'URL imagen', tipo:'text', listado:true},
+      {clave:'codigo_x', etiqueta:'Código X', tipo:'number'},
+      {clave:'codigo_y', etiqueta:'Código Y', tipo:'number'},
+    ]
+  },
+  config: {
+    etiqueta:'Configuración', pk:'campo', autoPk:false,
+    columnas:[
+      {clave:'campo', etiqueta:'Campo', tipo:'text', listado:true},
+      {clave:'valor', etiqueta:'Valor', tipo:'textarea', listado:true},
+      {clave:'actualizado_en', etiqueta:'Actualizado', tipo:'readonly', listado:true},
+    ]
+  },
+  usuarios_panel: {
+    etiqueta:'Usuarios del panel', pk:'id', autoPk:false,
+    columnas:[
+      {clave:'id', etiqueta:'UID de Supabase Auth', tipo:'text', listado:true},
+      {clave:'email', etiqueta:'Correo', tipo:'text', listado:true},
+      {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
+      {clave:'rol', etiqueta:'Rol', tipo:'select', opciones:['admin','lectura'], listado:true},
+      {clave:'creado_en', etiqueta:'Desde', tipo:'readonly', listado:true},
+    ]
+  },
+};
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+document.getElementById('form-login').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const btn = document.getElementById('btn-login');
+  const err = document.getElementById('login-error');
+  err.classList.add('oculto');
+  btn.disabled = true; btn.textContent = 'Entrando…';
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  btn.disabled = false; btn.textContent = 'Entrar';
+  if (error){
+    err.textContent = error.message === 'Invalid login credentials'
+      ? 'Correo o contraseña incorrectos.' : error.message;
+    err.classList.remove('oculto');
+  }
+});
+
+document.getElementById('btn-salir').addEventListener('click', async ()=>{
+  await sb.auth.signOut();
+  location.reload();
+});
+
+async function iniciarSesionSiCorresponde(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if (!session) return mostrarLogin();
+
+  const { data: perfil, error } = await sb
+    .from('usuarios_panel')
+    .select('*')
+    .eq('id', session.user.id)
+    .maybeSingle();
+
+  if (error || !perfil){
+    document.getElementById('login-error').textContent =
+      'Tu cuenta no tiene acceso asignado en el panel. Pide a un administrador que te agregue en "Usuarios del panel".';
+    document.getElementById('login-error').classList.remove('oculto');
+    await sb.auth.signOut();
+    return mostrarLogin();
+  }
+
+  usuarioActual = perfil;
+  esAdmin = perfil.rol === 'admin';
+  mostrarApp();
+}
+
+function mostrarLogin(){
+  document.getElementById('vista-login').style.display = 'flex';
+  document.getElementById('app').classList.remove('activo');
+}
+
+function mostrarApp(){
+  document.getElementById('vista-login').style.display = 'none';
+  document.getElementById('app').classList.add('activo');
+  document.getElementById('pie-nombre').textContent = usuarioActual.nombre || usuarioActual.email;
+  document.getElementById('pie-rol').textContent = esAdmin ? 'Admin' : 'Lectura';
+  if (esAdmin){
+    document.getElementById('sep-admin').classList.remove('oculto');
+    document.getElementById('nav-usuarios').classList.remove('oculto');
+  }
+  cargarVista('dashboard');
+}
+
+/* =========================================================
+   NAVEGACIÓN
+   ========================================================= */
+document.getElementById('nav-principal').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.enlace');
+  if (!btn) return;
+  cargarVista(btn.dataset.vista);
+});
+
+function marcarNavActiva(vista){
+  document.querySelectorAll('#nav-principal .enlace').forEach(b=>{
+    b.classList.toggle('activo', b.dataset.vista === vista);
+  });
+}
+
+async function cargarVista(vista){
+  vistaActual = vista;
+  marcarNavActiva(vista);
+  document.getElementById('acciones-vista').innerHTML = '';
+  if (vista === 'pagosmasivos'){
+    document.getElementById('titulo-vista').textContent = 'Pagos masivos';
+    document.getElementById('subtitulo-vista').textContent = 'Agrupa comisiones pendientes por afiliado y regístralas como pagadas.';
+    return renderPagosMasivos();
+  }
+  if (vista === 'dashboard'){
+    document.getElementById('titulo-vista').textContent = 'Dashboard';
+    document.getElementById('subtitulo-vista').textContent = 'Evolución de ventas, comisiones y clientes.';
+    return renderDashboard();
+  }
+  if (vista === 'envios'){
+    document.getElementById('titulo-vista').textContent = 'Envíos del día';
+    document.getElementById('subtitulo-vista').textContent = 'Lo que se vendió y falta por despachar.';
+    return renderEnvios();
+  }
+  const t = TABLAS[vista];
+  document.getElementById('titulo-vista').textContent = t.etiqueta;
+  document.getElementById('subtitulo-vista').textContent = 'Cargando…';
+  document.getElementById('contenido-vista').innerHTML = '<div class="cargando">Cargando datos…</div>';
+
+  if (esAdmin && !t.soloLectura){
+    const btnNuevo = document.createElement('button');
+    btnNuevo.textContent = '+ Agregar';
+    btnNuevo.onclick = ()=>abrirModal(vista, null);
+    document.getElementById('acciones-vista').appendChild(btnNuevo);
+  }
+
+  const orden = t.columnas.find(c=>c.clave.includes('fecha') || c.clave.includes('creado')) ;
+  let query = sb.from(vista).select('*').limit(500);
+  const { data, error } = await query;
+  if (error){
+    document.getElementById('contenido-vista').innerHTML = `<div class="vacio">No se pudieron cargar los datos: ${error.message}</div>`;
+    return;
+  }
+  filasCache = data || [];
+  document.getElementById('subtitulo-vista').textContent = `${filasCache.length} registro(s)`;
+  renderTabla(vista, filasCache);
+}
+
+function renderTabla(vista, filas){
+  const t = TABLAS[vista];
+  const cols = t.columnas.filter(c=>c.listado !== false && (c.listado === true));
+  const colsMostrar = cols.length ? cols : t.columnas.slice(0,5);
+
+  let html = `
+    <div class="panel-tabla">
+      <div class="barra">
+        <input type="search" placeholder="Buscar…" id="buscador-tabla">
+      </div>
+      <div style="overflow-x:auto;">
+      <table class="datos"><thead><tr>`;
+  colsMostrar.forEach(c=> html += `<th>${c.etiqueta}</th>`);
+  if (esAdmin && !t.soloLectura) html += `<th></th>`;
+  html += `</tr></thead><tbody id="cuerpo-tabla"></tbody></table></div></div>`;
+  document.getElementById('contenido-vista').innerHTML = html;
+
+  function pintar(lista){
+    const cuerpo = document.getElementById('cuerpo-tabla');
+    if (!lista.length){
+      cuerpo.innerHTML = `<tr><td colspan="${colsMostrar.length+1}"><div class="vacio">No hay registros todavía.</div></td></tr>`;
+      return;
+    }
+    cuerpo.innerHTML = lista.map(fila=>{
+      let tds = colsMostrar.map(c=>`<td title="${escapeHtml(String(fila[c.clave] ?? ''))}">${formatoCelda(fila[c.clave], c)}</td>`).join('');
+      if (esAdmin && !t.soloLectura){
+        tds += `<td><button class="secundario" style="padding:4px 10px;" onclick="window.__editarFila('${vista}','${fila[t.pk]}')">Editar</button></td>`;
+      }
+      return `<tr>${tds}</tr>`;
+    }).join('');
+  }
+  pintar(filas);
+
+  document.getElementById('buscador-tabla').addEventListener('input', (e)=>{
+    const q = e.target.value.toLowerCase();
+    const filtradas = filas.filter(f => JSON.stringify(f).toLowerCase().includes(q));
+    pintar(filtradas);
+  });
+}
+
+function formatoCelda(valor, columna){
+  if (valor === null || valor === undefined || valor === '') return '<span style="color:#c3bda8;">—</span>';
+  if (columna.clave.includes('estado')){
+    const v = String(valor).toLowerCase();
+    let clase = 'gris';
+    if (['disponible','pagado','verificado','activo'].includes(v)) clase='verde';
+    else if (['pendiente','parcial','en lote'].includes(v)) clase='ocre';
+    else if (['no disponible','rechazado','cancelado'].includes(v)) clase='rojo';
+    return `<span class="chip ${clase}">${escapeHtml(String(valor))}</span>`;
+  }
+  if (typeof valor === 'string' && valor.match(/^\d{4}-\d{2}-\d{2}T/)) return new Date(valor).toLocaleString('es-VE',{dateStyle:'medium',timeStyle:'short'});
+  return escapeHtml(String(valor));
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+window.__editarFila = (vista, pkValor)=>{
+  const t = TABLAS[vista];
+  const fila = filasCache.find(f=> String(f[t.pk]) === String(pkValor));
+  abrirModal(vista, fila);
+};
+
+/* =========================================================
+   MODAL GENÉRICO CREAR / EDITAR
+   ========================================================= */
+let modalContexto = { vista:null, fila:null };
+
+function abrirModal(vista, fila){
+  const t = TABLAS[vista];
+  modalContexto = { vista, fila };
+  document.getElementById('modal-titulo').textContent = fila ? `Editar ${t.etiqueta.toLowerCase()}` : `Nuevo registro · ${t.etiqueta}`;
+  document.getElementById('modal-error').classList.add('oculto');
+  document.getElementById('modal-eliminar').classList.toggle('oculto', !fila);
+
+  const campos = document.getElementById('modal-campos');
+  campos.innerHTML = '';
+  t.columnas.forEach(c=>{
+    const valorActual = fila ? (fila[c.clave] ?? '') : '';
+    const soloLectura = c.tipo === 'readonly' || (fila && c.clave === t.pk);
+    const div = document.createElement('div');
+    div.className = 'campo' + (c.tipo==='textarea' ? ' ancho' : '');
+    let input;
+    if (c.tipo === 'select'){
+      input = `<select data-campo="${c.clave}" ${soloLectura?'disabled':''}>
+        <option value="">—</option>
+        ${c.opciones.map(o=>`<option value="${o}" ${o===valorActual?'selected':''}>${o}</option>`).join('')}
+      </select>`;
+    } else if (c.tipo === 'textarea'){
+      input = `<textarea data-campo="${c.clave}" ${soloLectura?'disabled':''}>${escapeHtml(String(valorActual))}</textarea>`;
+    } else {
+      const tipoHtml = c.tipo === 'number' ? 'number' : (c.tipo === 'date' ? 'datetime-local' : 'text');
+      let val = valorActual;
+      if (c.tipo === 'date' && val) val = new Date(val).toISOString().slice(0,16);
+      input = `<input type="${tipoHtml}" data-campo="${c.clave}" value="${escapeHtml(String(val))}" ${soloLectura?'disabled':''}>`;
+    }
+    div.innerHTML = `<label>${c.etiqueta}</label>${input}`;
+    campos.appendChild(div);
+  });
+
+  document.getElementById('fondo-modal').classList.add('activo');
+}
+
+document.getElementById('modal-cancelar').onclick = cerrarModal;
+document.getElementById('fondo-modal').addEventListener('click', (e)=>{
+  if (e.target.id === 'fondo-modal') cerrarModal();
+});
+function cerrarModal(){ document.getElementById('fondo-modal').classList.remove('activo'); }
+
+document.getElementById('form-modal').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const { vista, fila } = modalContexto;
+  const t = TABLAS[vista];
+  const datos = {};
+  document.querySelectorAll('#modal-campos [data-campo]').forEach(el=>{
+    if (el.disabled) return;
+    const clave = el.dataset.campo;
+    const colDef = t.columnas.find(c=>c.clave===clave);
+    let v = el.value;
+    if (v === '') { datos[clave] = null; return; }
+    if (colDef.tipo === 'number') v = Number(v);
+    if (colDef.tipo === 'date') v = new Date(v).toISOString();
+    datos[clave] = v;
+  });
+
+  const errBox = document.getElementById('modal-error');
+  errBox.classList.add('oculto');
+
+  let resultado;
+  if (fila){
+    resultado = await sb.from(vista).update(datos).eq(t.pk, fila[t.pk]);
+  } else {
+    if (!t.autoPk && (!datos[t.pk] || datos[t.pk]==='')){
+      errBox.textContent = `El campo "${t.columnas.find(c=>c.clave===t.pk).etiqueta}" es obligatorio.`;
+      errBox.classList.remove('oculto');
+      return;
+    }
+    resultado = await sb.from(vista).insert(datos);
+  }
+  if (resultado.error){
+    errBox.textContent = resultado.error.message;
+    errBox.classList.remove('oculto');
+    return;
+  }
+  cerrarModal();
+  cargarVista(vista);
+});
+
+document.getElementById('modal-eliminar').onclick = async ()=>{
+  const { vista, fila } = modalContexto;
+  const t = TABLAS[vista];
+  if (!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
+  const { error } = await sb.from(vista).delete().eq(t.pk, fila[t.pk]);
+  if (error){ alert('No se pudo eliminar: ' + error.message); return; }
+  cerrarModal();
+  cargarVista(vista);
+};
+
+/* =========================================================
+   PAGOS MASIVOS (lotes)
+   ========================================================= */
+let subvistaLotes = 'nuevo'; // 'nuevo' | 'historial'
+let seleccionComisiones = new Set();
+let filtroDesde = '';
+let filtroHasta = '';
+
+async function renderPagosMasivos(){
+  const cont = document.getElementById('contenido-vista');
+  cont.innerHTML = `
+    <div class="tab-lotes">
+      <button id="tab-nuevo" class="${subvistaLotes==='nuevo'?'activo':''}">Comisiones pendientes</button>
+      <button id="tab-historial" class="${subvistaLotes==='historial'?'activo':''}">Lotes existentes</button>
+    </div>
+    <div id="cuerpo-pagos-masivos"><div class="cargando">Cargando…</div></div>
+  `;
+  document.getElementById('tab-nuevo').onclick = ()=>{ subvistaLotes='nuevo'; renderPagosMasivos(); };
+  document.getElementById('tab-historial').onclick = ()=>{ subvistaLotes='historial'; renderPagosMasivos(); };
+
+  if (subvistaLotes === 'nuevo') return renderComisionesPendientes();
+  return renderHistorialLotes();
+}
+
+function barraFiltroFechas(){
+  return `
+    <div class="panel-tabla" style="margin-bottom:16px;">
+      <div class="barra" style="flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div><label>Comisiones generadas desde</label><input type="date" id="filtro-desde" value="${filtroDesde}"></div>
+          <div><label>hasta</label><input type="date" id="filtro-hasta" value="${filtroHasta}"></div>
+          <button class="secundario" id="btn-primeros5" type="button">Primeros 5 días del mes</button>
+          <button class="secundario" id="btn-ver-todas" type="button">Ver todas las pendientes</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function activarFiltrosLote(){
+  document.getElementById('filtro-desde')?.addEventListener('change', e=>{ filtroDesde = e.target.value; renderComisionesPendientes(); });
+  document.getElementById('filtro-hasta')?.addEventListener('change', e=>{ filtroHasta = e.target.value; renderComisionesPendientes(); });
+  document.getElementById('btn-primeros5')?.addEventListener('click', ()=>{
+    const hoy = new Date();
+    filtroDesde = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().slice(0,10);
+    filtroHasta = new Date(hoy.getFullYear(), hoy.getMonth(), 5).toISOString().slice(0,10);
+    renderComisionesPendientes();
+  });
+  document.getElementById('btn-ver-todas')?.addEventListener('click', ()=>{
+    filtroDesde=''; filtroHasta='';
+    renderComisionesPendientes();
+  });
+}
+
+async function renderComisionesPendientes(){
+  const cuerpo = document.getElementById('cuerpo-pagos-masivos');
+  let consulta = sb.from('comisiones').select('*').eq('estado_comision','Pendiente').order('afiliado_id');
+  if (filtroDesde) consulta = consulta.gte('fecha_generada', filtroDesde + 'T00:00:00');
+  if (filtroHasta) consulta = consulta.lte('fecha_generada', filtroHasta + 'T23:59:59');
+  const { data: comisiones, error } = await consulta;
+  if (error){ cuerpo.innerHTML = barraFiltroFechas() + `<div class="vacio">${error.message}</div>`; activarFiltrosLote(); return; }
+  if (!comisiones.length){
+    cuerpo.innerHTML = barraFiltroFechas() + `<div class="vacio">No hay comisiones pendientes en ese rango. Prueba "Ver todas las pendientes" o ajusta las fechas.</div>`;
+    activarFiltrosLote();
+    return;
+  }
+
+  const { data: afiliados } = await sb.from('afiliados').select('afiliado_id, codigo_propio, metodo_pago_preferido, datos_pago_cuenta');
+  const mapaAfiliados = Object.fromEntries((afiliados||[]).map(a=>[a.afiliado_id, a]));
+
+  const porAfiliado = {};
+  comisiones.forEach(c=>{
+    (porAfiliado[c.afiliado_id] ||= []).push(c);
+  });
+
+  const totalGeneral = comisiones.reduce((s,c)=>s+Number(c.monto_comision||0),0);
+  seleccionComisiones = new Set(comisiones.map(c=>c.comision_id)); // preseleccionar todo
+
+  let html = barraFiltroFechas() + `
+    <div class="tarjetas-resumen">
+      <div class="tarjeta"><div class="num">${comisiones.length}</div><div class="etq">comisiones en el rango</div></div>
+      <div class="tarjeta"><div class="num">${Object.keys(porAfiliado).length}</div><div class="etq">afiliados involucrados</div></div>
+      <div class="tarjeta"><div class="num">$${totalGeneral.toFixed(2)}</div><div class="etq">monto total del rango</div></div>
+    </div>`;
+
+  if (!esAdmin){
+    html += `<div class="msg-permiso">Solo un administrador puede crear lotes de pago. Puedes ver el detalle a continuación.</div>`;
+  }
+
+  html += Object.entries(porAfiliado).map(([afId, lista])=>{
+    const info = mapaAfiliados[afId] || {};
+    const subtotal = lista.reduce((s,c)=>s+Number(c.monto_comision||0),0);
+    return `
+      <div class="grupo-afiliado">
+        <div class="cab">
+          <div>
+            <strong>${escapeHtml(afId)}</strong> · ${escapeHtml(info.codigo_propio||'')}
+            <div style="font-size:11.5px;color:#8a8570;">${escapeHtml(info.metodo_pago_preferido||'Sin método de pago registrado')}</div>
+          </div>
+          <div style="text-align:right;">
+            <label style="display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--verde-900);">
+              <input type="checkbox" class="chk-afiliado" data-afiliado="${afId}" checked ${esAdmin?'':'disabled'}>
+              $${subtotal.toFixed(2)}
+            </label>
+          </div>
+        </div>
+        <div class="cuerpo">
+          ${lista.map(c=>`
+            <div class="fila-comision">
+              <span>Compra ${escapeHtml(c.compra_id)} · Nivel ${c.nivel_afiliacion}</span>
+              <span>
+                <label style="display:inline-flex;align-items:center;gap:6px;">
+                  <input type="checkbox" class="chk-comision" data-comision="${c.comision_id}" data-afiliado="${afId}" checked ${esAdmin?'':'disabled'}>
+                  $${Number(c.monto_comision||0).toFixed(2)}
+                </label>
+              </span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }).join('');
+
+  if (esAdmin){
+    html += `<button id="btn-crear-lote" style="margin-top:6px;">Crear lote con seleccionados</button>`;
+  }
+
+  document.getElementById('cuerpo-pagos-masivos').innerHTML = html;
+
+  document.querySelectorAll('.chk-afiliado').forEach(chk=>{
+    chk.addEventListener('change', ()=>{
+      document.querySelectorAll(`.chk-comision[data-afiliado="${chk.dataset.afiliado}"]`).forEach(c=>c.checked = chk.checked);
+    });
+  });
+
+  const btnCrear = document.getElementById('btn-crear-lote');
+  if (btnCrear){
+    btnCrear.addEventListener('click', ()=>crearLote(comisiones));
+  }
+  activarFiltrosLote();
+}
+
+async function crearLote(todasLasComisiones){
+  const seleccionadas = Array.from(document.querySelectorAll('.chk-comision:checked')).map(el=>el.dataset.comision);
+  if (!seleccionadas.length){ alert('Selecciona al menos una comisión.'); return; }
+  const btn = document.getElementById('btn-crear-lote');
+  btn.disabled = true; btn.textContent = 'Creando lote…';
+
+  const comisionesSel = todasLasComisiones.filter(c=>seleccionadas.includes(c.comision_id));
+  const totalLote = comisionesSel.reduce((s,c)=>s+Number(c.monto_comision||0),0);
+
+  // 1) crear el lote
+  const { data: lote, error: errLote } = await sb
+    .from('lotes_pago')
+    .insert({ creado_por: usuarioActual.id, monto_total: totalLote, estado:'Pendiente' })
+    .select().single();
+  if (errLote){ alert('No se pudo crear el lote: ' + errLote.message); btn.disabled=false; btn.textContent='Crear lote con seleccionados'; return; }
+
+  // 2) agrupar por afiliado para el detalle
+  const porAfiliado = {};
+  comisionesSel.forEach(c=>{ (porAfiliado[c.afiliado_id] ||= []).push(c); });
+  const filasDetalle = Object.entries(porAfiliado).map(([afId, lista])=>({
+    lote_id: lote.lote_id,
+    afiliado_id: afId,
+    monto_total: lista.reduce((s,c)=>s+Number(c.monto_comision||0),0),
+  }));
+  const { error: errDetalle } = await sb.from('lotes_pago_detalle').insert(filasDetalle);
+  if (errDetalle){ alert('El lote se creó pero falló el detalle: ' + errDetalle.message); }
+
+  // 3) marcar las comisiones como "En Lote" y vincularlas
+  const { error: errComis } = await sb
+    .from('comisiones')
+    .update({ estado_comision:'En Lote', lote_pago_id: lote.lote_id })
+    .in('comision_id', seleccionadas);
+  if (errComis){ alert('El lote se creó pero no se pudieron actualizar todas las comisiones: ' + errComis.message); }
+
+  subvistaLotes = 'historial';
+  renderPagosMasivos();
+}
+
+async function renderHistorialLotes(){
+  const cuerpo = document.getElementById('cuerpo-pagos-masivos');
+  const { data: lotes, error } = await sb.from('lotes_pago').select('*').order('fecha_creado',{ascending:false});
+  if (error){ cuerpo.innerHTML = `<div class="vacio">${error.message}</div>`; return; }
+  if (!lotes.length){ cuerpo.innerHTML = `<div class="vacio">Todavía no se ha creado ningún lote de pago.</div>`; return; }
+
+  cuerpo.innerHTML = lotes.map(l=>`
+    <div class="grupo-afiliado" data-lote="${l.lote_id}">
+      <div class="cab" onclick="window.__toggleLote('${l.lote_id}')">
+        <div>
+          <strong>${l.lote_id}</strong>
+          <div style="font-size:11.5px;color:#8a8570;">${new Date(l.fecha_creado).toLocaleString('es-VE',{dateStyle:'medium',timeStyle:'short'})}</div>
+        </div>
+        <div style="text-align:right;">
+          <span class="chip ${l.estado==='Pagado'?'verde':(l.estado==='Parcial'?'ocre':'gris')}">${l.estado}</span>
+          <div style="font-weight:700;color:var(--verde-900);">$${Number(l.monto_total||0).toFixed(2)}</div>
+        </div>
+      </div>
+      <div class="cuerpo oculto" id="detalle-${l.lote_id}"></div>
+    </div>
+  `).join('');
+}
+
+window.__toggleLote = async (loteId)=>{
+  const cont = document.getElementById(`detalle-${loteId}`);
+  const abierto = !cont.classList.contains('oculto');
+  document.querySelectorAll('[id^="detalle-"]').forEach(d=>d.classList.add('oculto'));
+  if (abierto) return;
+  cont.classList.remove('oculto');
+  cont.innerHTML = '<div class="cargando">Cargando detalle…</div>';
+
+  const { data: detalle, error } = await sb.from('lotes_pago_detalle').select('*').eq('lote_id', loteId);
+  if (error){ cont.innerHTML = `<div class="vacio">${error.message}</div>`; return; }
+
+  cont.innerHTML = `
+    <div class="fila-lote-detalle" style="font-weight:600;color:var(--verde-700);font-size:11.5px;">
+      <span>Afiliado</span><span>Método de pago</span><span>Referencia</span><span>Monto</span><span></span>
+    </div>
+    ${detalle.map(d=>`
+      <div class="fila-lote-detalle" data-detalle="${d.detalle_id}">
+        <span>${escapeHtml(d.afiliado_id)}</span>
+        <input type="text" placeholder="Ej: Pago móvil, Binance…" value="${escapeHtml(d.metodo_pago||'')}" data-campo="metodo_pago" ${(!esAdmin||d.estado_pago==='Pagado')?'disabled':''}>
+        <input type="text" placeholder="N° de referencia" value="${escapeHtml(d.referencia_pago||'')}" data-campo="referencia_pago" ${(!esAdmin||d.estado_pago==='Pagado')?'disabled':''}>
+        <span>$${Number(d.monto_total||0).toFixed(2)}</span>
+        ${esAdmin ? (d.estado_pago==='Pagado'
+            ? `<span class="chip verde">Pagado</span>`
+            : `<button style="padding:5px 10px;" onclick="window.__marcarPagado('${loteId}','${d.detalle_id}')">Marcar pagado</button>`)
+          : `<span class="chip ${d.estado_pago==='Pagado'?'verde':'ocre'}">${d.estado_pago}</span>`}
+      </div>
+    `).join('')}
+  `;
+};
+
+window.__marcarPagado = async (loteId, detalleId)=>{
+  const fila = document.querySelector(`[data-detalle="${detalleId}"]`);
+  const metodo = fila.querySelector('[data-campo="metodo_pago"]').value.trim();
+  const referencia = fila.querySelector('[data-campo="referencia_pago"]').value.trim();
+  if (!metodo || !referencia){
+    alert('Registra el método de pago y la referencia antes de marcar como pagado.');
+    return;
+  }
+  const { data: detalleActual, error: errGet } = await sb.from('lotes_pago_detalle').select('*').eq('detalle_id', detalleId).single();
+  if (errGet){ alert(errGet.message); return; }
+
+  const ahora = new Date().toISOString();
+  const { error: errUpd } = await sb.from('lotes_pago_detalle').update({
+    metodo_pago: metodo, referencia_pago: referencia, estado_pago:'Pagado', fecha_pago: ahora
+  }).eq('detalle_id', detalleId);
+  if (errUpd){ alert('No se pudo marcar como pagado: ' + errUpd.message); return; }
+
+  // Actualiza las comisiones de ese afiliado dentro de este lote
+  await sb.from('comisiones').update({ estado_comision:'Pagado', fecha_pago_comision: ahora })
+    .eq('lote_pago_id', loteId).eq('afiliado_id', detalleActual.afiliado_id);
+
+  // Descuenta el saldo pendiente y actualiza fecha de último pago del afiliado
+  const { data: afiliado } = await sb.from('afiliados').select('saldo_acumulado').eq('afiliado_id', detalleActual.afiliado_id).single();
+  if (afiliado){
+    const nuevoSaldo = Math.max(0, Number(afiliado.saldo_acumulado||0) - Number(detalleActual.monto_total||0));
+    await sb.from('afiliados').update({ saldo_acumulado: nuevoSaldo, fecha_ultimo_pago: ahora }).eq('afiliado_id', detalleActual.afiliado_id);
+  }
+
+  // Revisa si todo el lote quedó pagado, para actualizar su estado
+  const { data: todoDetalle } = await sb.from('lotes_pago_detalle').select('estado_pago').eq('lote_id', loteId);
+  const todosPagados = todoDetalle.every(d=>d.estado_pago==='Pagado');
+  const algunoPagado = todoDetalle.some(d=>d.estado_pago==='Pagado');
+  await sb.from('lotes_pago').update({
+    estado: todosPagados ? 'Pagado' : (algunoPagado ? 'Parcial' : 'Pendiente'),
+    fecha_pago: todosPagados ? ahora : null
+  }).eq('lote_id', loteId);
+
+  window.__toggleLote(loteId); // recarga (cierra)
+  window.__toggleLote(loteId); // vuelve a abrir con datos frescos
+};
+
+/* =========================================================
+   ENVÍOS DEL DÍA
+   ========================================================= */
+let fechaEnvios = new Date().toISOString().slice(0,10);
+let soloPendientesEnvio = true;
+
+function soloDigitos(t){ return String(t||'').replace(/\D/g,''); }
+
+async function renderEnvios(){
+  const cont = document.getElementById('contenido-vista');
+  cont.innerHTML = `<div class="cargando">Cargando pedidos del día…</div>`;
+
+  let consulta = sb.from('compras').select('*')
+    .gte('fecha_compra', fechaEnvios + 'T00:00:00')
+    .lte('fecha_compra', fechaEnvios + 'T23:59:59')
+    .order('fecha_compra', { ascending:false });
+  const { data: compras, error } = await consulta;
+  if (error){ cont.innerHTML = `<div class="vacio">${error.message}</div>`; return; }
+
+  let lista = compras || [];
+  if (soloPendientesEnvio) lista = lista.filter(c=>c.estado_envio === 'Pendiente');
+
+  const usuarioIds = [...new Set((compras||[]).map(c=>c.usuario_id).filter(Boolean))];
+  let mapaClientes = {};
+  if (usuarioIds.length){
+    const { data: clientesData } = await sb.from('clientes').select('usuario_id, nombre, apellido, telefono').in('usuario_id', usuarioIds);
+    mapaClientes = Object.fromEntries((clientesData||[]).map(c=>[c.usuario_id, c]));
+  }
+
+  const barra = `
+    <div class="panel-tabla" style="margin-bottom:16px;">
+      <div class="barra" style="flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div><label>Fecha</label><input type="date" id="fecha-envios" value="${fechaEnvios}"></div>
+          <button class="secundario" id="btn-hoy-envios" type="button">Hoy</button>
+          <label style="display:flex;align-items:center;gap:6px;font-weight:400;color:var(--tinta);margin-bottom:2px;">
+            <input type="checkbox" id="chk-solo-pendientes" ${soloPendientesEnvio?'checked':''}> Solo pendientes de envío
+          </label>
+        </div>
+      </div>
+    </div>`;
+
+  if (!lista.length){
+    cont.innerHTML = barra + `<div class="vacio">${(compras||[]).length ? 'No hay pedidos pendientes de envío para ese día.' : 'No se registraron ventas ese día.'}</div>`;
+    activarControlesEnvios();
+    return;
+  }
+
+  cont.innerHTML = barra + `
+    <div class="tarjetas-resumen">
+      <div class="tarjeta"><div class="num">${(compras||[]).length}</div><div class="etq">ventas del día</div></div>
+      <div class="tarjeta"><div class="num">${(compras||[]).filter(c=>c.estado_envio==='Pendiente').length}</div><div class="etq">pendientes de envío</div></div>
+      <div class="tarjeta"><div class="num">$${(compras||[]).reduce((s,c)=>s+Number(c.monto||0),0).toFixed(2)}</div><div class="etq">monto vendido</div></div>
+    </div>
+  ` + lista.map(c=>{
+    const cli = mapaClientes[c.usuario_id] || {};
+    const nombreCliente = [cli.nombre, cli.apellido].filter(Boolean).join(' ') || c.usuario_id;
+    const telefono = soloDigitos(c.telefono_envio || cli.telefono);
+    const enviado = c.estado_envio === 'Enviado';
+    return `
+      <div class="grupo-afiliado" data-compra="${c.compra_id}">
+        <div class="cuerpo" style="padding-top:14px;">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+            <div>
+              <strong>${escapeHtml(nombreCliente)}</strong> · ${escapeHtml(c.producto_id||'')}
+              <div style="font-size:11.5px;color:#8a8570;">${escapeHtml(c.ciudad_envio||'Sin ciudad')} · ${escapeHtml(c.oficina_envio||'Sin oficina de envío')}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:700;color:var(--verde-900);">$${Number(c.monto||0).toFixed(2)}</div>
+              <span class="chip ${enviado?'verde':'ocre'}">${c.estado_envio}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            ${telefono ? `<a href="https://wa.me/${telefono}" target="_blank"><button type="button" class="secundario">WhatsApp al cliente</button></a>` : ''}
+            ${enviado
+              ? `<span style="font-size:12.5px;color:#8a8570;">Guía: <strong>${escapeHtml(c.numero_guia||'—')}</strong> · ${c.fecha_envio ? new Date(c.fecha_envio).toLocaleDateString('es-VE') : ''}</span>`
+              : (esAdmin ? `
+                <input type="text" placeholder="N° de guía" id="guia-${c.compra_id}" style="max-width:160px;">
+                <button type="button" onclick="window.__marcarEnviado('${c.compra_id}')">Marcar enviado</button>
+              ` : '')}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  activarControlesEnvios();
+}
+
+function activarControlesEnvios(){
+  document.getElementById('fecha-envios')?.addEventListener('change', e=>{ fechaEnvios = e.target.value; renderEnvios(); });
+  document.getElementById('btn-hoy-envios')?.addEventListener('click', ()=>{ fechaEnvios = new Date().toISOString().slice(0,10); renderEnvios(); });
+  document.getElementById('chk-solo-pendientes')?.addEventListener('change', e=>{ soloPendientesEnvio = e.target.checked; renderEnvios(); });
+}
+
+window.__marcarEnviado = async (compraId)=>{
+  const input = document.getElementById(`guia-${compraId}`);
+  const guia = input.value.trim();
+  if (!guia){ alert('Ingresa el número de guía antes de marcar como enviado.'); return; }
+  const { error } = await sb.from('compras').update({
+    estado_envio:'Enviado', numero_guia: guia, fecha_envio: new Date().toISOString()
+  }).eq('compra_id', compraId);
+  if (error){ alert('No se pudo actualizar: ' + error.message); return; }
+  renderEnvios();
+};
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+let graficosActivos = [];
+
+function destruirGraficos(){
+  graficosActivos.forEach(g=>g.destroy());
+  graficosActivos = [];
+}
+
+function nombreMes(fechaISO){
+  const d = new Date(fechaISO);
+  return d.toLocaleDateString('es-VE', { month:'short', year:'2-digit' });
+}
+
+function ultimosNMeses(n){
+  const meses = [];
+  const hoy = new Date();
+  for (let i=n-1; i>=0; i--){
+    const d = new Date(hoy.getFullYear(), hoy.getMonth()-i, 1);
+    meses.push({ clave: `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`, etiqueta: d.toLocaleDateString('es-VE',{month:'short',year:'2-digit'}) });
+  }
+  return meses;
+}
+
+async function renderDashboard(){
+  const cont = document.getElementById('contenido-vista');
+  cont.innerHTML = `<div class="cargando">Calculando métricas…</div>`;
+  destruirGraficos();
+
+  const [ { data: compras }, { data: comisiones }, { data: afiliados }, { data: clientes } ] = await Promise.all([
+    sb.from('compras').select('monto, tipo_item, estado_compra, fecha_compra').order('fecha_compra', { ascending:true }),
+    sb.from('comisiones').select('monto_comision, estado_comision, fecha_generada'),
+    sb.from('afiliados').select('afiliado_id, ventas_referidas_totales').order('ventas_referidas_totales', { ascending:false }).limit(6),
+    sb.from('clientes').select('fecha_registro'),
+  ]);
+
+  const meses = ultimosNMeses(12);
+  const idxMes = Object.fromEntries(meses.map((m,i)=>[m.clave,i]));
+
+  const ventasPorMes = new Array(12).fill(0);
+  (compras||[]).forEach(c=>{
+    if (!c.fecha_compra) return;
+    const clave = c.fecha_compra.slice(0,7);
+    if (clave in idxMes) ventasPorMes[idxMes[clave]] += Number(c.monto||0);
+  });
+
+  const clientesPorMes = new Array(12).fill(0);
+  (clientes||[]).forEach(c=>{
+    if (!c.fecha_registro) return;
+    const clave = c.fecha_registro.slice(0,7);
+    if (clave in idxMes) clientesPorMes[idxMes[clave]] += 1;
+  });
+
+  const ventasPorTipo = { producto:0, evento:0 };
+  (compras||[]).forEach(c=>{ ventasPorTipo[c.tipo_item] = (ventasPorTipo[c.tipo_item]||0) + Number(c.monto||0); });
+
+  const comisionesPorEstado = {};
+  (comisiones||[]).forEach(c=>{ comisionesPorEstado[c.estado_comision] = (comisionesPorEstado[c.estado_comision]||0) + Number(c.monto_comision||0); });
+
+  const totalVentas = (compras||[]).reduce((s,c)=>s+Number(c.monto||0),0);
+  const totalComisiones = (comisiones||[]).reduce((s,c)=>s+Number(c.monto_comision||0),0);
+
+  cont.innerHTML = `
+    <div class="tarjetas-resumen">
+      <div class="tarjeta"><div class="num">$${totalVentas.toFixed(2)}</div><div class="etq">ventas totales registradas</div></div>
+      <div class="tarjeta"><div class="num">${(compras||[]).length}</div><div class="etq">compras totales</div></div>
+      <div class="tarjeta"><div class="num">$${totalComisiones.toFixed(2)}</div><div class="etq">comisiones generadas en total</div></div>
+      <div class="tarjeta"><div class="num">${(clientes||[]).length}</div><div class="etq">clientes registrados</div></div>
+    </div>
+    <div class="rejilla-dashboard">
+      <div class="tarjeta-grafico ancho"><h4>Evolución de ventas (últimos 12 meses)</h4><canvas id="g-ventas-mes"></canvas></div>
+      <div class="tarjeta-grafico"><h4>Ventas: productos vs. eventos</h4><canvas id="g-tipo"></canvas></div>
+      <div class="tarjeta-grafico"><h4>Comisiones por estado</h4><canvas id="g-comisiones"></canvas></div>
+      <div class="tarjeta-grafico"><h4>Clientes nuevos por mes</h4><canvas id="g-clientes-mes"></canvas></div>
+      <div class="tarjeta-grafico"><h4>Top afiliados por ventas referidas</h4><canvas id="g-afiliados"></canvas></div>
+    </div>
+  `;
+
+  const colores = ['#2f5140','#4a7a63','#b8863f','#9c6f2f','#a33b3b','#8a8570'];
+
+  graficosActivos.push(new Chart(document.getElementById('g-ventas-mes'), {
+    type:'line',
+    data:{ labels: meses.map(m=>m.etiqueta), datasets:[{ label:'Ventas ($)', data:ventasPorMes, borderColor:'#2f5140', backgroundColor:'rgba(47,81,64,.12)', fill:true, tension:.3 }] },
+    options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+  }));
+
+  graficosActivos.push(new Chart(document.getElementById('g-tipo'), {
+    type:'doughnut',
+    data:{ labels:['Productos','Eventos'], datasets:[{ data:[ventasPorTipo.producto||0, ventasPorTipo.evento||0], backgroundColor:['#2f5140','#b8863f'] }] },
+  }));
+
+  const estadosComision = Object.keys(comisionesPorEstado);
+  graficosActivos.push(new Chart(document.getElementById('g-comisiones'), {
+    type:'pie',
+    data:{ labels: estadosComision, datasets:[{ data: estadosComision.map(k=>comisionesPorEstado[k]), backgroundColor: colores }] },
+  }));
+
+  graficosActivos.push(new Chart(document.getElementById('g-clientes-mes'), {
+    type:'bar',
+    data:{ labels: meses.map(m=>m.etiqueta), datasets:[{ label:'Clientes nuevos', data:clientesPorMes, backgroundColor:'#4a7a63' }] },
+    options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
+  }));
+
+  graficosActivos.push(new Chart(document.getElementById('g-afiliados'), {
+    type:'bar',
+    data:{ labels: (afiliados||[]).map(a=>a.afiliado_id), datasets:[{ label:'Ventas referidas', data:(afiliados||[]).map(a=>Number(a.ventas_referidas_totales||0)), backgroundColor:'#9c6f2f' }] },
+    options:{ indexAxis:'y', plugins:{legend:{display:false}} }
+  }));
+}
+
+/* =========================================================
+   ARRANQUE
+   ========================================================= */
+iniciarSesionSiCorresponde();
+sb.auth.onAuthStateChange((evento)=>{
+  if (evento === 'SIGNED_OUT') mostrarLogin();
+});
+</script>
+</body>
+</html>
