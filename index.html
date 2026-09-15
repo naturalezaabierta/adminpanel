@@ -431,6 +431,12 @@
   .tarjeta .etq{
     font-size:12px;color:var(--tinta-suave);font-weight:500;
   }
+  .tarjeta.destacada{
+    background:linear-gradient(135deg,#7b3fa0,#b23fa0);
+    border:none;
+  }
+  .tarjeta.destacada .num{color:#fff;}
+  .tarjeta.destacada .etq{color:rgba(255,255,255,.85);}
 
   .grupo-afiliado{
     background:#fff;
@@ -603,6 +609,7 @@
       <div class="separador oculto" id="sep-admin">Administración</div>
       <button class="enlace oculto" id="nav-permisos" data-vista="permisos_area">🔐 Permisos por área</button>
       <button class="enlace oculto" id="nav-usuarios" data-vista="usuarios_panel">👤 Usuarios del panel</button>
+      <button class="enlace oculto" id="nav-auditoria" data-vista="auditoria">🕵️ Auditoría</button>
     </nav>
     <div class="pie-usuario">
       <div class="usuario-info-box">
@@ -665,6 +672,43 @@
       <div class="acciones">
         <button type="button" class="secundario" id="clave-cancelar">Cancelar</button>
         <button type="submit" id="clave-guardar">Actualizar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MODAL AGREGAR USUARIO DEL PANEL ================= -->
+<div class="fondo-modal" id="fondo-modal-nuevo-usuario">
+  <div class="modal" style="max-width:460px;">
+    <h3>Agregar usuario del panel</h3>
+    <form id="form-nuevo-usuario">
+      <div class="rejilla">
+        <div class="campo ancho">
+          <label>Nombre completo</label>
+          <input type="text" id="nu-nombre" required>
+        </div>
+        <div class="campo ancho">
+          <label>Correo</label>
+          <input type="email" id="nu-correo" required>
+        </div>
+        <div class="campo ancho">
+          <label>Contraseña temporal</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="nu-clave" required minlength="6" placeholder="Ej: NA2026x">
+            <button type="button" class="secundario" id="nu-generar-clave" style="white-space:nowrap;">Generar</button>
+          </div>
+          <p style="font-size:11.5px;color:var(--tinta-suave);margin:6px 0 0;">Se la das a la persona para su primer ingreso; ella puede cambiarla luego con "Cambiar clave".</p>
+        </div>
+        <div class="campo ancho">
+          <label>Rol</label>
+          <select id="nu-rol"></select>
+          <p style="font-size:11.5px;color:var(--tinta-suave);margin:6px 0 0;">Puedes afinar los permisos exactos después desde "Permisos por área".</p>
+        </div>
+      </div>
+      <p class="error oculto" id="nu-error" style="color:var(--rojo-600);background:var(--rojo-50);padding:8px 12px;border-radius:var(--radio-sm);font-size:12px;margin-top:14px;"></p>
+      <div class="acciones">
+        <button type="button" class="secundario" id="nu-cancelar">Cancelar</button>
+        <button type="submit" id="nu-guardar">Crear usuario</button>
       </div>
     </form>
   </div>
@@ -876,7 +920,7 @@ const TABLAS = {
   usuarios_panel: {
     etiqueta:'Usuarios del panel', pk:'id', autoPk:false,
     columnas:[
-      {clave:'id', etiqueta:'UID de Supabase Auth', tipo:'text', listado:true},
+      {clave:'id', etiqueta:'UID de Supabase Auth', tipo:'readonly', listado:true},
       {clave:'email', etiqueta:'Correo', tipo:'text', listado:true},
       {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
       {clave:'rol', etiqueta:'Rol', tipo:'select', opciones:['admin','lectura'], listado:true},
@@ -1048,6 +1092,7 @@ function mostrarApp(){
     document.getElementById('sep-admin').classList.remove('oculto');
     document.getElementById('nav-usuarios').classList.remove('oculto');
     document.getElementById('nav-permisos').classList.remove('oculto');
+    document.getElementById('nav-auditoria').classList.remove('oculto');
   } else {
     Object.keys(TABLAS).forEach(vista=>{
       const t = TABLAS[vista];
@@ -1113,6 +1158,11 @@ async function cargarVista(vista){
     document.getElementById('subtitulo-vista').textContent = 'Quién puede editar o solo ver cada área del panel.';
     return renderPermisosArea();
   }
+  if (vista === 'auditoria'){
+    document.getElementById('titulo-vista').textContent = 'Auditoría';
+    document.getElementById('subtitulo-vista').textContent = 'Quién cambió qué, y cuándo.';
+    return renderAuditoria();
+  }
   const t = TABLAS[vista];
   if (!puedeVer(vista)) return mostrarSinAcceso(t.etiqueta);
   document.getElementById('titulo-vista').textContent = t.etiqueta;
@@ -1122,7 +1172,7 @@ async function cargarVista(vista){
   if (puedeEditar(vista)){
     const btnNuevo = document.createElement('button');
     btnNuevo.textContent = '+ Agregar';
-    btnNuevo.onclick = ()=>abrirModal(vista, null);
+    btnNuevo.onclick = ()=> vista === 'usuarios_panel' ? abrirModalNuevoUsuario() : abrirModal(vista, null);
     document.getElementById('acciones-vista').appendChild(btnNuevo);
   }
 
@@ -1698,7 +1748,88 @@ const AREAS_PERMISO = [
   { clave:'pagos_referidos', etiqueta:'Pagos a referidos' },
   { clave:'creativos', etiqueta:'Creativos' },
   { clave:'catalogo', etiqueta:'Catálogo' },
+  { clave:'atencion_publico', etiqueta:'Atención al público' },
 ];
+
+const ROLES_PANEL = [
+  { valor:'admin', etiqueta:'Administrador (acceso total)', rolDb:'admin', permisos:[] },
+  { valor:'pedidos_envios', etiqueta:'Pedidos y envíos', rolDb:'lectura', permisos:[
+      {area:'pedidos_envios',nivel:'editar'},{area:'pagos_referidos',nivel:'lectura'},
+      {area:'creativos',nivel:'lectura'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
+  { valor:'pagos_referidos', etiqueta:'Pagos a referidos', rolDb:'lectura', permisos:[
+      {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'editar'},
+      {area:'creativos',nivel:'lectura'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
+  { valor:'creativos', etiqueta:'Creativos', rolDb:'lectura', permisos:[
+      {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'lectura'},
+      {area:'creativos',nivel:'editar'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
+  { valor:'catalogo', etiqueta:'Catálogo', rolDb:'lectura', permisos:[
+      {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'lectura'},
+      {area:'creativos',nivel:'lectura'},{area:'catalogo',nivel:'editar'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
+  { valor:'atencion_publico', etiqueta:'Atención al público (asesor)', rolDb:'lectura', permisos:[
+      {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'sin_acceso'},
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'editar'} ] },
+  { valor:'lectura', etiqueta:'Solo lectura general', rolDb:'lectura', permisos:[
+      {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'lectura'},
+      {area:'creativos',nivel:'lectura'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
+];
+
+function abrirModalNuevoUsuario(){
+  document.getElementById('nu-nombre').value = '';
+  document.getElementById('nu-correo').value = '';
+  document.getElementById('nu-clave').value = '';
+  document.getElementById('nu-error').classList.add('oculto');
+  const sel = document.getElementById('nu-rol');
+  sel.innerHTML = ROLES_PANEL.map(r=>`<option value="${r.valor}">${r.etiqueta}</option>`).join('');
+  document.getElementById('fondo-modal-nuevo-usuario').classList.add('activo');
+}
+document.getElementById('nu-cancelar').addEventListener('click', ()=>{
+  document.getElementById('fondo-modal-nuevo-usuario').classList.remove('activo');
+});
+document.getElementById('nu-generar-clave').addEventListener('click', ()=>{
+  const clave = Math.random().toString(36).slice(-4).toUpperCase() + Math.floor(1000+Math.random()*9000);
+  document.getElementById('nu-clave').value = clave;
+});
+document.getElementById('form-nuevo-usuario').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('nu-guardar');
+  const err = document.getElementById('nu-error');
+  err.classList.add('oculto');
+  const nombre = document.getElementById('nu-nombre').value.trim();
+  const email = document.getElementById('nu-correo').value.trim();
+  const password = document.getElementById('nu-clave').value;
+  const rolSel = ROLES_PANEL.find(r=>r.valor === document.getElementById('nu-rol').value);
+
+  btn.disabled = true; btn.textContent = 'Creando…';
+  try{
+    const { data: sesion } = await sb.auth.getSession();
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/crear-usuario-panel`, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization': `Bearer ${sesion.session.access_token}`,
+        'apikey': SUPABASE_KEY,
+      },
+      body: JSON.stringify({
+        nombre, email, password,
+        rol: rolSel.rolDb,
+        permisos: rolSel.permisos,
+      }),
+    });
+    const resultado = await resp.json();
+    if (!resp.ok || resultado.error){
+      err.textContent = resultado.error || 'No se pudo crear el usuario.';
+      err.classList.remove('oculto');
+      return;
+    }
+    document.getElementById('fondo-modal-nuevo-usuario').classList.remove('activo');
+    cargarVista('usuarios_panel');
+  } catch(ex){
+    err.textContent = 'Error de conexión: ' + ex.message;
+    err.classList.remove('oculto');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Crear usuario';
+  }
+});
 
 async function renderPermisosArea(){
   const cont = document.getElementById('contenido-vista');
@@ -1766,6 +1897,76 @@ async function renderPermisosArea(){
 }
 
 /* =========================================================
+   AUDITORÍA (solo admin)
+   ========================================================= */
+const TABLAS_AUDITABLES = [
+  { valor:'', etiqueta:'Todas las tablas' },
+  { valor:'compras', etiqueta:'Compras' },
+  { valor:'comisiones', etiqueta:'Comisiones' },
+  { valor:'lotes_pago', etiqueta:'Lotes de pago' },
+  { valor:'lotes_pago_detalle', etiqueta:'Detalle de lotes' },
+  { valor:'creativos', etiqueta:'Creativos' },
+  { valor:'productos_servicios', etiqueta:'Productos y servicios' },
+  { valor:'eventos_experiencias', etiqueta:'Eventos y experiencias' },
+];
+
+async function renderAuditoria(filtroTabla){
+  const cont = document.getElementById('contenido-vista');
+  cont.innerHTML = `<div class="cargando">Cargando historial…</div>`;
+
+  const { data, error } = await sb.rpc('listar_auditoria', {
+    p_tabla: filtroTabla || null,
+    p_limite: 150,
+  });
+  if (error){
+    cont.innerHTML = `<div class="vacio">No se pudo cargar la auditoría: ${error.message}</div>`;
+    return;
+  }
+
+  const chipAccion = a => a==='INSERT' ? 'verde' : a==='DELETE' ? 'rojo' : 'ocre';
+
+  cont.innerHTML = `
+    <div style="margin-bottom:14px;max-width:260px;">
+      <select id="filtro-tabla-auditoria">
+        ${TABLAS_AUDITABLES.map(t=>`<option value="${t.valor}" ${filtroTabla===t.valor?'selected':''}>${t.etiqueta}</option>`).join('')}
+      </select>
+    </div>
+    <div class="panel-tabla">
+      <div style="overflow-x:auto;">
+      <table class="datos"><thead><tr>
+        <th>Fecha</th><th>Quién</th><th>Tabla</th><th>Acción</th><th>Registro</th><th>Detalle</th>
+      </tr></thead>
+      <tbody>
+        ${(data||[]).map(r=>`
+          <tr>
+            <td style="white-space:nowrap;">${new Date(r.creado_en).toLocaleString('es-VE')}</td>
+            <td>${escapeHtml(r.usuario_email || r.usuario_id || '—')}</td>
+            <td>${escapeHtml(r.tabla)}</td>
+            <td><span class="chip ${chipAccion(r.accion)}">${r.accion}</span></td>
+            <td>${escapeHtml(r.registro_id || '—')}</td>
+            <td><button class="secundario" style="padding:4px 10px;font-size:11.5px;" onclick='window.__verDetalleAuditoria(${JSON.stringify(JSON.stringify(r)).replace(/'/g,"&#39;")})'>Ver</button></td>
+          </tr>
+        `).join('') || `<tr><td colspan="6" class="vacio">Sin cambios registrados todavía.</td></tr>`}
+      </tbody></table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('filtro-tabla-auditoria').addEventListener('change', e=>{
+    renderAuditoria(e.target.value);
+  });
+}
+
+window.__verDetalleAuditoria = (jsonStr)=>{
+  const r = JSON.parse(jsonStr);
+  alert(
+    `Tabla: ${r.tabla}\nAcción: ${r.accion}\nQuién: ${r.usuario_email || r.usuario_id}\nFecha: ${new Date(r.creado_en).toLocaleString('es-VE')}\n\n` +
+    `Antes:\n${r.datos_anteriores ? JSON.stringify(r.datos_anteriores, null, 2) : '—'}\n\n` +
+    `Después:\n${r.datos_nuevos ? JSON.stringify(r.datos_nuevos, null, 2) : '—'}`
+  );
+};
+
+/* =========================================================
    DASHBOARD
    ========================================================= */
 let graficosActivos = [];
@@ -1825,10 +2026,10 @@ async function renderDashboard(){
 
   cont.innerHTML = `
     <div class="tarjetas-resumen">
-      <div class="tarjeta"><div class="num">$${totalVentas.toFixed(2)}</div><div class="etq">Ventas totales registradas</div></div>
-      <div class="tarjeta"><div class="num">${(compras||[]).length}</div><div class="etq">Compras totales</div></div>
-      <div class="tarjeta"><div class="num">$${totalComisiones.toFixed(2)}</div><div class="etq">Comisiones generadas</div></div>
-      <div class="tarjeta"><div class="num">${(clientes||[]).length}</div><div class="etq">Clientes registrados</div></div>
+      <div class="tarjeta destacada"><div class="num">$${totalVentas.toFixed(2)}</div><div class="etq">Ventas totales registradas</div></div>
+      <div class="tarjeta destacada"><div class="num">${(compras||[]).length}</div><div class="etq">Compras totales</div></div>
+      <div class="tarjeta destacada"><div class="num">$${totalComisiones.toFixed(2)}</div><div class="etq">Comisiones generadas</div></div>
+      <div class="tarjeta destacada"><div class="num">${(clientes||[]).length}</div><div class="etq">Clientes registrados</div></div>
     </div>
     <div class="rejilla-dashboard">
       <div class="tarjeta-grafico ancho"><h4>Evolución de ventas (últimos 12 meses)</h4><canvas id="g-ventas-mes"></canvas></div>
