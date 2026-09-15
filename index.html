@@ -17,22 +17,31 @@
     --rojo-600:#a33b3b;
     --tinta:#20241f;
     --borde:#dcd5c4;
-    --radio:6px;
-    font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+    --radio:8px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
     background:var(--arena-50);
     color:var(--tinta);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     font-size:14px;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
   }
   h1,h2,h3{
-    font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color:var(--verde-900);
+    font-weight:700;
+    letter-spacing:-.01em;
+    margin:0 0 4px 0;
+  }
+  h4{
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color:var(--verde-900);
     font-weight:600;
-    margin:0 0 4px 0;
+    margin:0 0 10px;
   }
   a{color:var(--verde-700);}
   button{
@@ -74,13 +83,33 @@
     display:flex;align-items:center;justify-content:center;
     padding:24px;
   }
+  .envoltorio-login{
+    width:100%;max-width:380px;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .marca-grande{
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    margin-bottom:24px;
+  }
+  .marca-grande img{
+    width:84px;height:84px;object-fit:contain;
+    margin-bottom:14px;
+    filter:drop-shadow(0 2px 6px rgba(31,51,39,.15));
+  }
+  .marca-grande h1{
+    font-size:20px;margin:0 0 3px;
+    color:var(--verde-900);
+  }
+  .marca-grande p{
+    margin:0;font-size:13px;color:#8a8570;
+  }
   .caja-login{
     background:#fff;
     border:1px solid var(--borde);
-    border-radius:10px;
-    padding:36px 32px;
-    width:100%;max-width:360px;
-    box-shadow:0 1px 3px rgba(31,51,39,.08);
+    border-radius:12px;
+    padding:30px 30px 26px;
+    width:100%;
+    box-shadow:0 4px 18px rgba(31,51,39,.09);
   }
   .caja-login .campo{margin-bottom:14px;}
   .caja-login p.error{color:var(--rojo-600);font-size:12.5px;margin:8px 0 0;}
@@ -88,10 +117,10 @@
     display:flex;align-items:center;gap:10px;margin-bottom:22px;
   }
   .marca .hoja{
-    width:34px;height:34px;border-radius:9px;
+    width:38px;height:38px;border-radius:9px;
     background:#fff;
     object-fit:contain;
-    padding:4px;
+    padding:3px;
     flex-shrink:0;
   }
   .enlace-tenue{
@@ -248,66 +277,66 @@
 
 <!-- ================= LOGIN ================= -->
 <div id="vista-login">
-  <div class="caja-login">
-    <div class="marca">
-      <img class="hoja" alt="Naturaleza Abierta" src="https://www.naturalezaabierta.com/wp-content/uploads/2026/03/cropped-cropped-solo-logo-WEB2.png">
-      <div>
-        <h1 style="font-size:17px;margin:0;">Naturaleza Abierta</h1>
-        <p style="margin:0;font-size:12px;color:#8a8570;">Panel de datos de Valentina</p>
-      </div>
+  <div class="envoltorio-login">
+    <div class="marca-grande">
+      <img alt="Naturaleza Abierta" src="https://www.naturalezaabierta.com/wp-content/uploads/2026/03/cropped-cropped-solo-logo-WEB2.png">
+      <h1>Naturaleza Abierta</h1>
+      <p>Panel de datos de Valentina</p>
     </div>
-    <form id="form-login">
-      <div class="campo">
-        <label>Correo</label>
-        <input type="email" id="login-email" required autocomplete="username">
-      </div>
-      <div class="campo">
-        <label>Contraseña</label>
-        <input type="password" id="login-pass" required autocomplete="current-password">
-      </div>
-      <button type="submit" style="width:100%;" id="btn-login">Entrar</button>
-      <p class="error oculto" id="login-error"></p>
-      <p style="margin:12px 0 0;text-align:center;">
-        <button type="button" class="enlace-tenue" id="btn-mostrar-olvide">¿Olvidaste tu contraseña?</button>
-      </p>
-    </form>
+    <div class="caja-login">
+      <form id="form-login">
+        <div class="campo">
+          <label>Correo</label>
+          <input type="email" id="login-email" required autocomplete="username">
+        </div>
+        <div class="campo">
+          <label>Contraseña</label>
+          <input type="password" id="login-pass" required autocomplete="current-password">
+        </div>
+        <button type="submit" style="width:100%;" id="btn-login">Entrar</button>
+        <p class="error oculto" id="login-error"></p>
+        <p style="margin:12px 0 0;text-align:center;">
+          <button type="button" class="enlace-tenue" id="btn-mostrar-olvide">¿Olvidaste tu contraseña?</button>
+        </p>
+      </form>
 
-    <form id="form-olvide" class="oculto" style="margin-top:14px;border-top:1px solid var(--borde);padding-top:14px;">
-      <p style="margin:0 0 10px;font-size:12.5px;color:#8a8570;">Escribe tu correo y te enviaremos un enlace para definir una nueva contraseña.</p>
-      <div class="campo">
-        <label>Correo</label>
-        <input type="email" id="olvide-email" required>
-      </div>
-      <button type="submit" style="width:100%;" id="btn-olvide">Enviar enlace</button>
-      <button type="button" class="secundario" style="width:100%;margin-top:8px;" id="btn-cancelar-olvide">Cancelar</button>
-      <p class="error oculto" id="olvide-error"></p>
-      <p class="ok oculto" id="olvide-ok">Listo, revisa ese correo (incluida la carpeta de spam) para el enlace.</p>
-    </form>
+      <form id="form-olvide" class="oculto" style="margin-top:14px;border-top:1px solid var(--borde);padding-top:14px;">
+        <p style="margin:0 0 10px;font-size:12.5px;color:#8a8570;">Escribe tu correo y te enviaremos un enlace para definir una nueva contraseña.</p>
+        <div class="campo">
+          <label>Correo</label>
+          <input type="email" id="olvide-email" required>
+        </div>
+        <button type="submit" style="width:100%;" id="btn-olvide">Enviar enlace</button>
+        <button type="button" class="secundario" style="width:100%;margin-top:8px;" id="btn-cancelar-olvide">Cancelar</button>
+        <p class="error oculto" id="olvide-error"></p>
+        <p class="ok oculto" id="olvide-ok">Listo, revisa ese correo (incluida la carpeta de spam) para el enlace.</p>
+      </form>
+    </div>
   </div>
 </div>
 
 <!-- ================= DEFINIR NUEVA CONTRASEÑA (llega desde el enlace del correo) ================= -->
 <div id="vista-recuperar" style="display:none;">
-  <div class="caja-login">
-    <div class="marca">
-      <img class="hoja" alt="Naturaleza Abierta" src="https://www.naturalezaabierta.com/wp-content/uploads/2026/03/cropped-cropped-solo-logo-WEB2.png">
-      <div>
-        <h1 style="font-size:17px;margin:0;">Nueva contraseña</h1>
-        <p style="margin:0;font-size:12px;color:#8a8570;">Define tu nueva contraseña de acceso</p>
-      </div>
+  <div class="envoltorio-login">
+    <div class="marca-grande">
+      <img alt="Naturaleza Abierta" src="https://www.naturalezaabierta.com/wp-content/uploads/2026/03/cropped-cropped-solo-logo-WEB2.png">
+      <h1>Nueva contraseña</h1>
+      <p>Define tu nueva contraseña de acceso</p>
     </div>
-    <form id="form-recuperar">
-      <div class="campo">
-        <label>Nueva contraseña</label>
-        <input type="password" id="recuperar-pass1" required minlength="6" autocomplete="new-password">
-      </div>
-      <div class="campo">
-        <label>Confirmar contraseña</label>
-        <input type="password" id="recuperar-pass2" required minlength="6" autocomplete="new-password">
-      </div>
-      <button type="submit" style="width:100%;" id="btn-recuperar">Guardar contraseña</button>
-      <p class="error oculto" id="recuperar-error"></p>
-    </form>
+    <div class="caja-login">
+      <form id="form-recuperar">
+        <div class="campo">
+          <label>Nueva contraseña</label>
+          <input type="password" id="recuperar-pass1" required minlength="6" autocomplete="new-password">
+        </div>
+        <div class="campo">
+          <label>Confirmar contraseña</label>
+          <input type="password" id="recuperar-pass2" required minlength="6" autocomplete="new-password">
+        </div>
+        <button type="submit" style="width:100%;" id="btn-recuperar">Guardar contraseña</button>
+        <p class="error oculto" id="recuperar-error"></p>
+      </form>
+    </div>
   </div>
 </div>
 
@@ -345,6 +374,7 @@
       <button class="enlace" data-vista="config">Configuración</button>
 
       <div class="separador oculto" id="sep-admin">Administración</div>
+      <button class="enlace oculto" id="nav-permisos" data-vista="permisos_area">Permisos por área</button>
       <button class="enlace oculto" id="nav-usuarios" data-vista="usuarios_panel">Usuarios del panel</button>
     </nav>
     <div class="pie-usuario">
@@ -423,6 +453,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let usuarioActual = null;   // fila de usuarios_panel
 let esAdmin = false;
+let misPermisos = {};   // { pedidos_envios:'editar'|'lectura'|'sin_acceso', ... } — solo aplica a no-admins
 let vistaActual = 'clientes';
 let filasCache = [];        // filas de la vista genérica actual (para editar/buscar)
 
@@ -470,7 +501,7 @@ const TABLAS = {
     ]
   },
   compras: {
-    etiqueta: 'Compras', pk:'compra_id', autoPk:false,
+    etiqueta: 'Compras', pk:'compra_id', autoPk:false, area:'pedidos_envios',
     columnas: [
       {clave:'compra_id', etiqueta:'ID compra', tipo:'text', listado:true},
       {clave:'usuario_id', etiqueta:'Cliente (usuario_id)', tipo:'text', listado:true},
@@ -506,7 +537,7 @@ const TABLAS = {
     ]
   },
   comisiones: {
-    etiqueta:'Comisiones', pk:'comision_id', autoPk:false, soloLectura:true,
+    etiqueta:'Comisiones', pk:'comision_id', autoPk:false, area:'pagos_referidos',
     columnas:[
       {clave:'comision_id', etiqueta:'ID comisión', tipo:'text', listado:true},
       {clave:'compra_id', etiqueta:'Compra', tipo:'text', listado:true},
@@ -522,7 +553,7 @@ const TABLAS = {
     ]
   },
   productos_servicios: {
-    etiqueta:'Productos y servicios', pk:'id', autoPk:false,
+    etiqueta:'Productos y servicios', pk:'id', autoPk:false, area:'catalogo',
     columnas:[
       {clave:'id', etiqueta:'ID', tipo:'text', listado:true},
       {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
@@ -553,7 +584,7 @@ const TABLAS = {
     ]
   },
   eventos_experiencias: {
-    etiqueta:'Eventos y experiencias', pk:'id', autoPk:false,
+    etiqueta:'Eventos y experiencias', pk:'id', autoPk:false, area:'catalogo',
     columnas:[
       {clave:'id', etiqueta:'ID', tipo:'text', listado:true},
       {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
@@ -601,7 +632,7 @@ const TABLAS = {
     ]
   },
   creativos: {
-    etiqueta:'Creativos', pk:'id', autoPk:true,
+    etiqueta:'Creativos', pk:'id', autoPk:true, area:'creativos',
     columnas:[
       {clave:'id', etiqueta:'ID', tipo:'readonly', listado:true},
       {clave:'producto', etiqueta:'Producto', tipo:'text', listado:true},
@@ -766,6 +797,15 @@ async function iniciarSesionSiCorresponde(){
 
   usuarioActual = perfil;
   esAdmin = perfil.rol === 'admin';
+
+  if (esAdmin){
+    misPermisos = { pedidos_envios:'editar', pagos_referidos:'editar', creativos:'editar', catalogo:'editar' };
+  } else {
+    const { data: permisos } = await sb.rpc('listar_permisos_usuario', { p_usuario_id: perfil.id });
+    misPermisos = {};
+    (permisos||[]).forEach(p=>{ misPermisos[p.area] = p.nivel; });
+  }
+
   mostrarApp();
 }
 
@@ -779,10 +819,25 @@ function mostrarApp(){
   document.getElementById('vista-login').style.display = 'none';
   document.getElementById('app').classList.add('activo');
   document.getElementById('pie-nombre').textContent = usuarioActual.nombre || usuarioActual.email;
-  document.getElementById('pie-rol').textContent = esAdmin ? 'Admin' : 'Lectura';
+  document.getElementById('pie-rol').textContent = esAdmin ? 'Admin' : 'Usuario';
   if (esAdmin){
     document.getElementById('sep-admin').classList.remove('oculto');
     document.getElementById('nav-usuarios').classList.remove('oculto');
+    document.getElementById('nav-permisos').classList.remove('oculto');
+  } else {
+    // Oculta del menú las áreas donde este usuario no tiene ni siquiera lectura
+    Object.keys(TABLAS).forEach(vista=>{
+      const t = TABLAS[vista];
+      if (t.area && misPermisos[t.area] === 'sin_acceso'){
+        document.querySelector(`#nav-principal .enlace[data-vista="${vista}"]`)?.classList.add('oculto');
+      }
+    });
+    if (misPermisos['pedidos_envios'] === 'sin_acceso'){
+      document.querySelector('#nav-principal .enlace[data-vista="envios"]')?.classList.add('oculto');
+    }
+    if (misPermisos['pagos_referidos'] === 'sin_acceso'){
+      document.querySelector('#nav-principal .enlace[data-vista="pagosmasivos"]')?.classList.add('oculto');
+    }
   }
   cargarVista('dashboard');
 }
@@ -802,11 +857,19 @@ function marcarNavActiva(vista){
   });
 }
 
+function mostrarSinAcceso(nombreVista){
+  document.getElementById('titulo-vista').textContent = nombreVista;
+  document.getElementById('subtitulo-vista').textContent = '';
+  document.getElementById('contenido-vista').innerHTML =
+    `<div class="vacio">No tienes acceso a esta sección. Pídele a un administrador que te asigne permiso.</div>`;
+}
+
 async function cargarVista(vista){
   vistaActual = vista;
   marcarNavActiva(vista);
   document.getElementById('acciones-vista').innerHTML = '';
   if (vista === 'pagosmasivos'){
+    if (!esAdmin && misPermisos['pagos_referidos'] === 'sin_acceso') return mostrarSinAcceso('Pagos masivos');
     document.getElementById('titulo-vista').textContent = 'Pagos masivos';
     document.getElementById('subtitulo-vista').textContent = 'Agrupa comisiones pendientes por afiliado y regístralas como pagadas.';
     return renderPagosMasivos();
@@ -817,16 +880,23 @@ async function cargarVista(vista){
     return renderDashboard();
   }
   if (vista === 'envios'){
+    if (!esAdmin && misPermisos['pedidos_envios'] === 'sin_acceso') return mostrarSinAcceso('Envíos del día');
     document.getElementById('titulo-vista').textContent = 'Envíos del día';
     document.getElementById('subtitulo-vista').textContent = 'Lo que se vendió y falta por despachar.';
     return renderEnvios();
   }
+  if (vista === 'permisos_area'){
+    document.getElementById('titulo-vista').textContent = 'Permisos por área';
+    document.getElementById('subtitulo-vista').textContent = 'Quién puede editar o solo ver cada área del panel.';
+    return renderPermisosArea();
+  }
   const t = TABLAS[vista];
+  if (!puedeVer(vista)) return mostrarSinAcceso(t.etiqueta);
   document.getElementById('titulo-vista').textContent = t.etiqueta;
   document.getElementById('subtitulo-vista').textContent = 'Cargando…';
   document.getElementById('contenido-vista').innerHTML = '<div class="cargando">Cargando datos…</div>';
 
-  if (esAdmin && !t.soloLectura){
+  if (puedeEditar(vista)){
     const btnNuevo = document.createElement('button');
     btnNuevo.textContent = '+ Agregar';
     btnNuevo.onclick = ()=>abrirModal(vista, null);
@@ -858,7 +928,7 @@ function renderTabla(vista, filas){
       <div style="overflow-x:auto;">
       <table class="datos"><thead><tr>`;
   colsMostrar.forEach(c=> html += `<th>${c.etiqueta}</th>`);
-  if (esAdmin && !t.soloLectura) html += `<th></th>`;
+  if (puedeEditar(vista)) html += `<th></th>`;
   html += `</tr></thead><tbody id="cuerpo-tabla"></tbody></table></div></div>`;
   document.getElementById('contenido-vista').innerHTML = html;
 
@@ -870,7 +940,7 @@ function renderTabla(vista, filas){
     }
     cuerpo.innerHTML = lista.map(fila=>{
       let tds = colsMostrar.map(c=>`<td title="${escapeHtml(String(fila[c.clave] ?? ''))}">${formatoCelda(fila[c.clave], c)}</td>`).join('');
-      if (esAdmin && !t.soloLectura){
+      if (puedeEditar(vista)){
         tds += `<td><button class="secundario" style="padding:4px 10px;" onclick="window.__editarFila('${vista}','${fila[t.pk]}')">Editar</button></td>`;
       }
       return `<tr>${tds}</tr>`;
@@ -901,6 +971,20 @@ function formatoCelda(valor, columna){
 
 function escapeHtml(s){
   return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function puedeEditar(vista){
+  if (esAdmin) return true;
+  const t = TABLAS[vista];
+  if (!t || !t.area) return false; // tablas sin área propia: solo admin edita
+  return misPermisos[t.area] === 'editar';
+}
+
+function puedeVer(vista){
+  if (esAdmin) return true;
+  const t = TABLAS[vista];
+  if (!t || !t.area) return true; // sin área propia: visible para cualquiera con cuenta (RLS lo respalda)
+  return misPermisos[t.area] !== 'sin_acceso';
 }
 
 window.__editarFila = (vista, pkValor)=>{
@@ -1013,6 +1097,7 @@ let filtroDesde = '';
 let filtroHasta = '';
 
 async function renderPagosMasivos(){
+  const puedeGestionarPagos = puedeEditar('comisiones');
   const cont = document.getElementById('contenido-vista');
   cont.innerHTML = `
     <div class="tab-lotes">
@@ -1088,8 +1173,8 @@ async function renderComisionesPendientes(){
       <div class="tarjeta"><div class="num">$${totalGeneral.toFixed(2)}</div><div class="etq">monto total del rango</div></div>
     </div>`;
 
-  if (!esAdmin){
-    html += `<div class="msg-permiso">Solo un administrador puede crear lotes de pago. Puedes ver el detalle a continuación.</div>`;
+  if (!puedeGestionarPagos){
+    html += `<div class="msg-permiso">No tienes permiso de edición en Pagos a referidos. Puedes ver el detalle a continuación.</div>`;
   }
 
   html += Object.entries(porAfiliado).map(([afId, lista])=>{
@@ -1104,7 +1189,7 @@ async function renderComisionesPendientes(){
           </div>
           <div style="text-align:right;">
             <label style="display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--verde-900);">
-              <input type="checkbox" class="chk-afiliado" data-afiliado="${afId}" checked ${esAdmin?'':'disabled'}>
+              <input type="checkbox" class="chk-afiliado" data-afiliado="${afId}" checked ${puedeGestionarPagos?'':'disabled'}>
               $${subtotal.toFixed(2)}
             </label>
           </div>
@@ -1115,7 +1200,7 @@ async function renderComisionesPendientes(){
               <span>Compra ${escapeHtml(c.compra_id)} · Nivel ${c.nivel_afiliacion}</span>
               <span>
                 <label style="display:inline-flex;align-items:center;gap:6px;">
-                  <input type="checkbox" class="chk-comision" data-comision="${c.comision_id}" data-afiliado="${afId}" checked ${esAdmin?'':'disabled'}>
+                  <input type="checkbox" class="chk-comision" data-comision="${c.comision_id}" data-afiliado="${afId}" checked ${puedeGestionarPagos?'':'disabled'}>
                   $${Number(c.monto_comision||0).toFixed(2)}
                 </label>
               </span>
@@ -1124,7 +1209,7 @@ async function renderComisionesPendientes(){
       </div>`;
   }).join('');
 
-  if (esAdmin){
+  if (puedeGestionarPagos){
     html += `<button id="btn-crear-lote" style="margin-top:6px;">Crear lote con seleccionados</button>`;
   }
 
@@ -1215,6 +1300,7 @@ window.__toggleLote = async (loteId)=>{
   const { data: detalle, error } = await sb.from('lotes_pago_detalle').select('*').eq('lote_id', loteId);
   if (error){ cont.innerHTML = `<div class="vacio">${error.message}</div>`; return; }
 
+  const puedeGestionarPagos = puedeEditar('comisiones');
   cont.innerHTML = `
     <div class="fila-lote-detalle" style="font-weight:600;color:var(--verde-700);font-size:11.5px;">
       <span>Afiliado</span><span>Método de pago</span><span>Referencia</span><span>Monto</span><span></span>
@@ -1222,10 +1308,10 @@ window.__toggleLote = async (loteId)=>{
     ${detalle.map(d=>`
       <div class="fila-lote-detalle" data-detalle="${d.detalle_id}">
         <span>${escapeHtml(d.afiliado_id)}</span>
-        <input type="text" placeholder="Ej: Pago móvil, Binance…" value="${escapeHtml(d.metodo_pago||'')}" data-campo="metodo_pago" ${(!esAdmin||d.estado_pago==='Pagado')?'disabled':''}>
-        <input type="text" placeholder="N° de referencia" value="${escapeHtml(d.referencia_pago||'')}" data-campo="referencia_pago" ${(!esAdmin||d.estado_pago==='Pagado')?'disabled':''}>
+        <input type="text" placeholder="Ej: Pago móvil, Binance…" value="${escapeHtml(d.metodo_pago||'')}" data-campo="metodo_pago" ${(!puedeGestionarPagos||d.estado_pago==='Pagado')?'disabled':''}>
+        <input type="text" placeholder="N° de referencia" value="${escapeHtml(d.referencia_pago||'')}" data-campo="referencia_pago" ${(!puedeGestionarPagos||d.estado_pago==='Pagado')?'disabled':''}>
         <span>$${Number(d.monto_total||0).toFixed(2)}</span>
-        ${esAdmin ? (d.estado_pago==='Pagado'
+        ${puedeGestionarPagos ? (d.estado_pago==='Pagado'
             ? `<span class="chip verde">Pagado</span>`
             : `<button style="padding:5px 10px;" onclick="window.__marcarPagado('${loteId}','${d.detalle_id}')">Marcar pagado</button>`)
           : `<span class="chip ${d.estado_pago==='Pagado'?'verde':'ocre'}">${d.estado_pago}</span>`}
@@ -1284,6 +1370,7 @@ let soloPendientesEnvio = true;
 function soloDigitos(t){ return String(t||'').replace(/\D/g,''); }
 
 async function renderEnvios(){
+  const puedeGestionarEnvios = puedeEditar('compras');
   const cont = document.getElementById('contenido-vista');
   cont.innerHTML = `<div class="cargando">Cargando pedidos del día…</div>`;
 
@@ -1351,7 +1438,7 @@ async function renderEnvios(){
             ${telefono ? `<a href="https://wa.me/${telefono}" target="_blank"><button type="button" class="secundario">WhatsApp al cliente</button></a>` : ''}
             ${enviado
               ? `<span style="font-size:12.5px;color:#8a8570;">Guía: <strong>${escapeHtml(c.numero_guia||'—')}</strong> · ${c.fecha_envio ? new Date(c.fecha_envio).toLocaleDateString('es-VE') : ''}</span>`
-              : (esAdmin ? `
+              : (puedeGestionarEnvios ? `
                 <input type="text" placeholder="N° de guía" id="guia-${c.compra_id}" style="max-width:160px;">
                 <button type="button" onclick="window.__marcarEnviado('${c.compra_id}')">Marcar enviado</button>
               ` : '')}
@@ -1379,6 +1466,81 @@ window.__marcarEnviado = async (compraId)=>{
   if (error){ alert('No se pudo actualizar: ' + error.message); return; }
   renderEnvios();
 };
+
+/* =========================================================
+   PERMISOS POR ÁREA (solo admin)
+   ========================================================= */
+const AREAS_PERMISO = [
+  { clave:'pedidos_envios', etiqueta:'Pedidos y envíos' },
+  { clave:'pagos_referidos', etiqueta:'Pagos a referidos' },
+  { clave:'creativos', etiqueta:'Creativos' },
+  { clave:'catalogo', etiqueta:'Catálogo' },
+];
+
+async function renderPermisosArea(){
+  const cont = document.getElementById('contenido-vista');
+  cont.innerHTML = `<div class="cargando">Cargando usuarios y permisos…</div>`;
+
+  const [ { data: usuarios, error: e1 }, { data: permisos, error: e2 } ] = await Promise.all([
+    sb.from('usuarios_panel').select('*').order('creado_en', { ascending:true }),
+    sb.from('permisos_area').select('*'),
+  ]);
+  if (e1 || e2){
+    cont.innerHTML = `<div class="vacio">No se pudo cargar: ${(e1||e2).message}</div>`;
+    return;
+  }
+
+  const mapa = {}; // usuario_id -> { area: nivel }
+  (permisos||[]).forEach(p=>{
+    mapa[p.usuario_id] = mapa[p.usuario_id] || {};
+    mapa[p.usuario_id][p.area] = p.nivel;
+  });
+
+  cont.innerHTML = `
+    <div class="panel-tabla">
+      <div style="overflow-x:auto;">
+      <table class="datos"><thead><tr>
+        <th>Usuario</th>
+        ${AREAS_PERMISO.map(a=>`<th>${a.etiqueta}</th>`).join('')}
+      </tr></thead>
+      <tbody>
+        ${(usuarios||[]).map(u=>{
+          if (u.rol === 'admin'){
+            return `<tr>
+              <td><strong>${escapeHtml(u.nombre||u.email)}</strong><div style="font-size:11px;color:#8a8570;">${escapeHtml(u.email)}</div></td>
+              <td colspan="${AREAS_PERMISO.length}" style="color:#8a8570;">Acceso total (administrador)</td>
+            </tr>`;
+          }
+          return `<tr>
+            <td><strong>${escapeHtml(u.nombre||u.email)}</strong><div style="font-size:11px;color:#8a8570;">${escapeHtml(u.email)}</div></td>
+            ${AREAS_PERMISO.map(a=>{
+              const nivel = (mapa[u.id] && mapa[u.id][a.clave]) || 'lectura';
+              return `<td><select data-usuario="${u.id}" data-area="${a.clave}" class="sel-permiso">
+                <option value="editar" ${nivel==='editar'?'selected':''}>Puede editar</option>
+                <option value="lectura" ${nivel==='lectura'?'selected':''}>Solo lectura</option>
+                <option value="sin_acceso" ${nivel==='sin_acceso'?'selected':''}>Sin acceso</option>
+              </select></td>`;
+            }).join('')}
+          </tr>`;
+        }).join('')}
+      </tbody></table>
+      </div>
+    </div>
+  `;
+
+  cont.querySelectorAll('.sel-permiso').forEach(sel=>{
+    sel.addEventListener('change', async ()=>{
+      sel.disabled = true;
+      const { error } = await sb.rpc('asignar_permiso_area', {
+        p_usuario_id: sel.dataset.usuario,
+        p_area: sel.dataset.area,
+        p_nivel: sel.value,
+      });
+      sel.disabled = false;
+      if (error) alert('No se pudo guardar: ' + error.message);
+    });
+  });
+}
 
 /* =========================================================
    DASHBOARD
