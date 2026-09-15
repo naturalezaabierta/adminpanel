@@ -69,7 +69,7 @@
   label{font-size:12px;color:var(--verde-700);font-weight:600;display:block;margin-bottom:3px;}
 
   /* ---------- Login ---------- */
-  #vista-login{
+  #vista-login, #vista-recuperar{
     min-height:100vh;
     display:flex;align-items:center;justify-content:center;
     padding:24px;
@@ -89,9 +89,16 @@
   }
   .marca .hoja{
     width:34px;height:34px;border-radius:9px;
-    background:linear-gradient(155deg,var(--verde-500),var(--verde-900));
+    background:#fff;
+    object-fit:contain;
+    padding:4px;
     flex-shrink:0;
   }
+  .enlace-tenue{
+    background:none;border:none;color:var(--verde-700);
+    font-size:12px;text-decoration:underline;cursor:pointer;padding:0;
+  }
+  .caja-login p.ok{color:var(--verde-700);font-size:12.5px;margin:8px 0 0;}
 
   /* ---------- Layout general ---------- */
   #app{display:none;min-height:100vh;grid-template-columns:220px 1fr;}
@@ -243,7 +250,7 @@
 <div id="vista-login">
   <div class="caja-login">
     <div class="marca">
-      <div class="hoja"></div>
+      <img class="hoja" alt="Naturaleza Abierta" src="https://www.naturalezaabierta.com/wp-content/uploads/2026/03/cropped-cropped-solo-logo-WEB2.png">
       <div>
         <h1 style="font-size:17px;margin:0;">Naturaleza Abierta</h1>
         <p style="margin:0;font-size:12px;color:#8a8570;">Panel de datos de Valentina</p>
@@ -260,6 +267,46 @@
       </div>
       <button type="submit" style="width:100%;" id="btn-login">Entrar</button>
       <p class="error oculto" id="login-error"></p>
+      <p style="margin:12px 0 0;text-align:center;">
+        <button type="button" class="enlace-tenue" id="btn-mostrar-olvide">¿Olvidaste tu contraseña?</button>
+      </p>
+    </form>
+
+    <form id="form-olvide" class="oculto" style="margin-top:14px;border-top:1px solid var(--borde);padding-top:14px;">
+      <p style="margin:0 0 10px;font-size:12.5px;color:#8a8570;">Escribe tu correo y te enviaremos un enlace para definir una nueva contraseña.</p>
+      <div class="campo">
+        <label>Correo</label>
+        <input type="email" id="olvide-email" required>
+      </div>
+      <button type="submit" style="width:100%;" id="btn-olvide">Enviar enlace</button>
+      <button type="button" class="secundario" style="width:100%;margin-top:8px;" id="btn-cancelar-olvide">Cancelar</button>
+      <p class="error oculto" id="olvide-error"></p>
+      <p class="ok oculto" id="olvide-ok">Listo, revisa ese correo (incluida la carpeta de spam) para el enlace.</p>
+    </form>
+  </div>
+</div>
+
+<!-- ================= DEFINIR NUEVA CONTRASEÑA (llega desde el enlace del correo) ================= -->
+<div id="vista-recuperar" style="display:none;">
+  <div class="caja-login">
+    <div class="marca">
+      <img class="hoja" alt="Naturaleza Abierta" src="https://www.naturalezaabierta.com/wp-content/uploads/2026/03/cropped-cropped-solo-logo-WEB2.png">
+      <div>
+        <h1 style="font-size:17px;margin:0;">Nueva contraseña</h1>
+        <p style="margin:0;font-size:12px;color:#8a8570;">Define tu nueva contraseña de acceso</p>
+      </div>
+    </div>
+    <form id="form-recuperar">
+      <div class="campo">
+        <label>Nueva contraseña</label>
+        <input type="password" id="recuperar-pass1" required minlength="6" autocomplete="new-password">
+      </div>
+      <div class="campo">
+        <label>Confirmar contraseña</label>
+        <input type="password" id="recuperar-pass2" required minlength="6" autocomplete="new-password">
+      </div>
+      <button type="submit" style="width:100%;" id="btn-recuperar">Guardar contraseña</button>
+      <p class="error oculto" id="recuperar-error"></p>
     </form>
   </div>
 </div>
@@ -268,7 +315,7 @@
 <div id="app">
   <aside>
     <div class="marca">
-      <div class="hoja"></div>
+      <img class="hoja" alt="Naturaleza Abierta" src="https://www.naturalezaabierta.com/wp-content/uploads/2026/03/cropped-cropped-solo-logo-WEB2.png">
       <div>
         <div style="font-weight:700;">Naturaleza Abierta</div>
         <div style="font-size:11px;opacity:.75;">Panel Valentina</div>
@@ -303,7 +350,8 @@
     <div class="pie-usuario">
       <div id="pie-nombre">—</div>
       <span class="rol" id="pie-rol">…</span>
-      <div style="margin-top:10px;">
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+        <button class="secundario" style="width:100%;color:var(--arena-100);border-color:rgba(255,255,255,.3);" id="btn-cambiar-clave">Cambiar contraseña</button>
         <button class="secundario" style="width:100%;color:var(--arena-100);border-color:rgba(255,255,255,.3);" id="btn-salir">Cerrar sesión</button>
       </div>
     </div>
@@ -332,6 +380,29 @@
         <button type="button" class="secundario" id="modal-cancelar">Cancelar</button>
         <button type="button" class="peligro oculto" id="modal-eliminar">Eliminar</button>
         <button type="submit" id="modal-guardar">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MODAL CAMBIAR CONTRASEÑA (usuario ya logueado) ================= -->
+<div class="fondo-modal" id="fondo-modal-clave">
+  <div class="modal" style="max-width:380px;">
+    <h3>Cambiar mi contraseña</h3>
+    <form id="form-cambiar-clave">
+      <div class="campo" style="margin-bottom:12px;">
+        <label>Nueva contraseña</label>
+        <input type="password" id="clave-nueva1" required minlength="6" autocomplete="new-password">
+      </div>
+      <div class="campo" style="margin-bottom:12px;">
+        <label>Confirmar nueva contraseña</label>
+        <input type="password" id="clave-nueva2" required minlength="6" autocomplete="new-password">
+      </div>
+      <p class="error oculto" id="clave-error" style="color:var(--rojo-600);margin:0 0 8px;"></p>
+      <p class="ok oculto" id="clave-ok" style="color:var(--verde-700);margin:0 0 8px;font-size:12.5px;">Contraseña actualizada.</p>
+      <div class="acciones">
+        <button type="button" class="secundario" id="clave-cancelar">Cancelar</button>
+        <button type="submit" id="clave-guardar">Guardar</button>
       </div>
     </form>
   </div>
@@ -585,6 +656,96 @@ document.getElementById('btn-salir').addEventListener('click', async ()=>{
   location.reload();
 });
 
+/* ---- Olvidé mi contraseña (desde login) ---- */
+document.getElementById('btn-mostrar-olvide').addEventListener('click', ()=>{
+  document.getElementById('form-olvide').classList.remove('oculto');
+  document.getElementById('btn-mostrar-olvide').parentElement.classList.add('oculto');
+});
+document.getElementById('btn-cancelar-olvide').addEventListener('click', ()=>{
+  document.getElementById('form-olvide').classList.add('oculto');
+  document.getElementById('btn-mostrar-olvide').parentElement.classList.remove('oculto');
+});
+document.getElementById('form-olvide').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById('olvide-email').value.trim();
+  const btn = document.getElementById('btn-olvide');
+  const err = document.getElementById('olvide-error');
+  const ok = document.getElementById('olvide-ok');
+  err.classList.add('oculto'); ok.classList.add('oculto');
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  btn.disabled = false; btn.textContent = 'Enviar enlace';
+  if (error){
+    err.textContent = error.message;
+    err.classList.remove('oculto');
+    return;
+  }
+  ok.classList.remove('oculto');
+});
+
+/* ---- Definir nueva contraseña (llega desde el enlace del correo) ---- */
+document.getElementById('form-recuperar').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const p1 = document.getElementById('recuperar-pass1').value;
+  const p2 = document.getElementById('recuperar-pass2').value;
+  const btn = document.getElementById('btn-recuperar');
+  const err = document.getElementById('recuperar-error');
+  err.classList.add('oculto');
+  if (p1 !== p2){
+    err.textContent = 'Las dos contraseñas no coinciden.';
+    err.classList.remove('oculto');
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  btn.disabled = false; btn.textContent = 'Guardar contraseña';
+  if (error){
+    err.textContent = error.message;
+    err.classList.remove('oculto');
+    return;
+  }
+  document.getElementById('vista-recuperar').style.display = 'none';
+  iniciarSesionSiCorresponde();
+});
+
+/* ---- Cambiar mi contraseña (ya dentro del panel) ---- */
+document.getElementById('btn-cambiar-clave').addEventListener('click', ()=>{
+  document.getElementById('clave-nueva1').value = '';
+  document.getElementById('clave-nueva2').value = '';
+  document.getElementById('clave-error').classList.add('oculto');
+  document.getElementById('clave-ok').classList.add('oculto');
+  document.getElementById('fondo-modal-clave').classList.add('activo');
+});
+document.getElementById('clave-cancelar').addEventListener('click', ()=>{
+  document.getElementById('fondo-modal-clave').classList.remove('activo');
+});
+document.getElementById('form-cambiar-clave').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const p1 = document.getElementById('clave-nueva1').value;
+  const p2 = document.getElementById('clave-nueva2').value;
+  const btn = document.getElementById('clave-guardar');
+  const err = document.getElementById('clave-error');
+  const ok = document.getElementById('clave-ok');
+  err.classList.add('oculto'); ok.classList.add('oculto');
+  if (p1 !== p2){
+    err.textContent = 'Las dos contraseñas no coinciden.';
+    err.classList.remove('oculto');
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  btn.disabled = false; btn.textContent = 'Guardar';
+  if (error){
+    err.textContent = error.message;
+    err.classList.remove('oculto');
+    return;
+  }
+  ok.classList.remove('oculto');
+  setTimeout(()=>document.getElementById('fondo-modal-clave').classList.remove('activo'), 1200);
+});
+
 async function iniciarSesionSiCorresponde(){
   const { data:{ session } } = await sb.auth.getSession();
   if (!session) return mostrarLogin();
@@ -610,6 +771,7 @@ async function iniciarSesionSiCorresponde(){
 
 function mostrarLogin(){
   document.getElementById('vista-login').style.display = 'flex';
+  document.getElementById('vista-recuperar').style.display = 'none';
   document.getElementById('app').classList.remove('activo');
 }
 
@@ -1335,6 +1497,11 @@ async function renderDashboard(){
 iniciarSesionSiCorresponde();
 sb.auth.onAuthStateChange((evento)=>{
   if (evento === 'SIGNED_OUT') mostrarLogin();
+  if (evento === 'PASSWORD_RECOVERY'){
+    document.getElementById('vista-login').style.display = 'none';
+    document.getElementById('app').classList.remove('activo');
+    document.getElementById('vista-recuperar').style.display = 'flex';
+  }
 });
 </script>
 </body>
