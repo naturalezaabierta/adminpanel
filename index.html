@@ -589,6 +589,7 @@
       <button class="enlace" data-vista="envios">📦 Envíos del día</button>
       <button class="enlace" data-vista="clientes">👥 Clientes</button>
       <button class="enlace" data-vista="compras">🛍️ Compras</button>
+      <button class="enlace" data-vista="empresas_envio">📦 Empresas de envío</button>
       <button class="enlace" data-vista="pagos">💳 Pagos</button>
       <button class="enlace" data-vista="metodos_pago">🏦 Métodos de pago</button>
 
@@ -831,10 +832,20 @@ const TABLAS = {
       {clave:'telefono_envio', etiqueta:'Teléfono de envío', tipo:'text'},
       {clave:'oficina_envio', etiqueta:'Oficina de envío', tipo:'text'},
       {clave:'ciudad_envio', etiqueta:'Ciudad de envío', tipo:'text'},
-      {clave:'estado_envio', etiqueta:'Estado de envío', tipo:'select', opciones:['Pendiente','Enviado','No Aplica'], listado:true},
+      {clave:'estado_envio', etiqueta:'Estado de envío', tipo:'select', opciones:['Pendiente','En preparación','Enviado','Entregado','No Aplica'], listado:true},
       {clave:'numero_guia', etiqueta:'Número de guía', tipo:'text', listado:true},
       {clave:'fecha_envio', etiqueta:'Fecha de envío', tipo:'date'},
       {clave:'fecha_compra', etiqueta:'Fecha', tipo:'readonly', listado:true},
+    ]
+  },
+  empresas_envio: {
+    etiqueta: 'Empresas de envío', pk:'id', autoPk:true, area:'pedidos_envios',
+    columnas: [
+      {clave:'id', etiqueta:'ID', tipo:'readonly', listado:true},
+      {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
+      {clave:'url_buscador', etiqueta:'URL del buscador', tipo:'text', listado:true},
+      {clave:'orden', etiqueta:'Orden', tipo:'number', listado:true},
+      {clave:'activo', etiqueta:'Activo', tipo:'select', opciones:['true','false'], listado:true},
     ]
   },
   pagos: {
@@ -2183,6 +2194,8 @@ async function renderPermisosArea(){
 const TABLAS_AUDITABLES = [
   { valor:'', etiqueta:'Todas las tablas' },
   { valor:'compras', etiqueta:'Compras' },
+  { valor:'empresas_envio', etiqueta:'Empresas de envío' },
+  { valor:'casos_atencion', etiqueta:'Casos de atención (CRM)' },
   { valor:'comisiones', etiqueta:'Comisiones' },
   { valor:'lotes_pago', etiqueta:'Lotes de pago' },
   { valor:'lotes_pago_detalle', etiqueta:'Detalle de lotes' },
