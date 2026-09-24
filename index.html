@@ -598,6 +598,10 @@
       <button class="enlace" data-vista="comisiones">💰 Comisiones</button>
       <button class="enlace" data-vista="pagosmasivos">⚡ Pagos masivos</button>
 
+      <div class="separador">Distribuidores</div>
+      <button class="enlace" data-vista="inventario_distribuidor">📦 Inventario</button>
+      <button class="enlace" data-vista="ventas_distribuidor">📈 Ventas</button>
+
       <div class="separador">Catálogo</div>
       <button class="enlace" data-vista="productos_servicios">🌿 Productos y servicios</button>
       <button class="enlace" data-vista="eventos_experiencias">🎫 Eventos y experiencias</button>
@@ -607,6 +611,10 @@
       <button class="enlace" data-vista="disparadores_venta">🎯 Disparadores de venta</button>
       <button class="enlace" data-vista="creativos">🎨 Creativos</button>
       <button class="enlace" data-vista="config">⚙️ Configuración</button>
+
+      <div class="separador">Asesores</div>
+      <button class="enlace" data-vista="asesores">🧑‍💼 Cuentas de asesores</button>
+      <button class="enlace" data-vista="rendimiento_asesores">📊 Rendimiento</button>
 
       <div class="separador oculto" id="sep-admin">Administración</div>
       <button class="enlace oculto" id="nav-permisos" data-vista="permisos_area">🔐 Permisos por área</button>
@@ -986,6 +994,40 @@ const TABLAS = {
       {clave:'creado_en', etiqueta:'Desde', tipo:'readonly', listado:true},
     ]
   },
+  asesores: {
+    etiqueta:'Cuentas de asesores', pk:'id', autoPk:false, area:'atencion_publico',
+    columnas:[
+      {clave:'id', etiqueta:'UID de Supabase Auth', tipo:'readonly', listado:true},
+      {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
+      {clave:'apellido', etiqueta:'Apellido', tipo:'text', listado:true},
+      {clave:'email', etiqueta:'Correo', tipo:'text', listado:true},
+      {clave:'telefono_personal', etiqueta:'Teléfono personal', tipo:'text'},
+      {clave:'activo', etiqueta:'Activo', tipo:'checkbox', listado:true},
+    ]
+  },
+  inventario_distribuidor: {
+    etiqueta:'Inventario de distribuidores', pk:'id', autoPk:true, area:'distribuidores',
+    columnas:[
+      {clave:'id', etiqueta:'ID', tipo:'readonly', listado:true},
+      {clave:'afiliado_id', etiqueta:'ID del distribuidor', tipo:'text', listado:true},
+      {clave:'producto_id', etiqueta:'Producto', tipo:'text', listado:true},
+      {clave:'cantidad_disponible', etiqueta:'Cantidad disponible', tipo:'number', listado:true},
+      {clave:'precio_venta_propio', etiqueta:'Precio de venta propio', tipo:'number', listado:true},
+      {clave:'es_demo', etiqueta:'Es demo', tipo:'checkbox', listado:true},
+    ]
+  },
+  ventas_distribuidor: {
+    etiqueta:'Ventas de distribuidores', pk:'id', autoPk:true, area:'distribuidores',
+    columnas:[
+      {clave:'id', etiqueta:'ID', tipo:'readonly', listado:true},
+      {clave:'afiliado_id', etiqueta:'ID del distribuidor', tipo:'text', listado:true},
+      {clave:'producto_id', etiqueta:'Producto', tipo:'text', listado:true},
+      {clave:'cantidad', etiqueta:'Cantidad', tipo:'number', listado:true},
+      {clave:'precio_unitario', etiqueta:'Precio unitario', tipo:'number', listado:true},
+      {clave:'fecha_venta', etiqueta:'Fecha', tipo:'readonly', listado:true},
+      {clave:'es_demo', etiqueta:'Es demo', tipo:'checkbox', listado:true},
+    ]
+  },
 };
 
 /* =========================================================
@@ -1229,6 +1271,12 @@ async function cargarVista(vista){
       document.getElementById('acciones-vista').appendChild(btnNuevaCuenta);
     }
     return renderMetodosPago();
+  }
+  if (vista === 'rendimiento_asesores'){
+    if (!esAdmin && misPermisos['atencion_publico'] === 'sin_acceso') return mostrarSinAcceso('Rendimiento de asesores');
+    document.getElementById('titulo-vista').textContent = 'Rendimiento de asesores';
+    document.getElementById('subtitulo-vista').textContent = 'Quién cierra más, quién convierte más, y quién se está quedando atrás.';
+    return renderRendimientoAsesores();
   }
   if (vista === 'auditoria'){
     document.getElementById('titulo-vista').textContent = 'Auditoría';
@@ -2270,6 +2318,84 @@ window.__verDetalleAuditoria = (jsonStr)=>{
     `Después:\n${r.datos_nuevos ? JSON.stringify(r.datos_nuevos, null, 2) : '—'}`
   );
 };
+
+async function renderRendimientoAsesores(diasFiltro){
+  const dias = diasFiltro || 30;
+  const cont = document.getElementById('contenido-vista');
+  cont.innerHTML = `<div class="cargando">Calculando métricas…</div>`;
+
+  const [{ data: metricas, error: errMetricas }, { data: rezagados, error: errRezagados }] = await Promise.all([
+    sb.rpc('fn_metricas_asesores', { p_dias: dias }),
+    sb.rpc('fn_casos_rezagados', { p_minutos_sin_tomar: 30, p_minutos_sin_responder: 30 }),
+  ]);
+
+  if (errMetricas){
+    cont.innerHTML = `<div class="vacio">No se pudo cargar el rendimiento: ${escapeHtml(errMetricas.message)}</div>`;
+    return;
+  }
+
+  const filasMetricas = (metricas||[]).filter(m => m.activo);
+  const filasRezagados = rezagados || [];
+
+  const chipTipo = t => t === 'sin_tomar' ? 'rojo' : 'ocre';
+  const etiquetaTipo = t => t === 'sin_tomar' ? 'Nadie lo ha tomado' : 'Sin responder al cliente';
+
+  cont.innerHTML = `
+    <div style="margin-bottom:14px;max-width:220px;">
+      <select id="filtro-dias-rendimiento">
+        <option value="7" ${dias==7?'selected':''}>Últimos 7 días</option>
+        <option value="30" ${dias==30?'selected':''}>Últimos 30 días</option>
+        <option value="90" ${dias==90?'selected':''}>Últimos 90 días</option>
+      </select>
+    </div>
+
+    <h3 style="margin:0 0 8px;font-size:14.5px;">⏳ Casos rezagados ahora mismo (${filasRezagados.length})</h3>
+    <div class="panel-tabla" style="margin-bottom:22px;">
+      <div style="overflow-x:auto;">
+      <table class="datos"><thead><tr>
+        <th>Tipo</th><th>Cliente</th><th>Motivo</th><th>Asesor</th><th>Esperando</th>
+      </tr></thead>
+      <tbody>
+        ${filasRezagados.map(r=>`
+          <tr>
+            <td><span class="chip ${chipTipo(r.tipo_rezago)}">${etiquetaTipo(r.tipo_rezago)}</span></td>
+            <td>${escapeHtml(r.cliente_telefono || '—')}</td>
+            <td>${escapeHtml(r.motivo || '—')}</td>
+            <td>${escapeHtml(r.asesor_nombre || '— sin asignar —')}</td>
+            <td style="white-space:nowrap;">${Math.round(r.minutos_esperando)} min</td>
+          </tr>
+        `).join('') || `<tr><td colspan="5" class="vacio">Nada rezagado ahora mismo. 🎉</td></tr>`}
+      </tbody></table>
+      </div>
+    </div>
+
+    <h3 style="margin:0 0 8px;font-size:14.5px;">🏆 Ranking de asesores</h3>
+    <div class="panel-tabla">
+      <div style="overflow-x:auto;">
+      <table class="datos"><thead><tr>
+        <th>Asesor</th><th>Casos cerrados</th><th>Convertidos a venta</th><th>Tasa de conversión</th>
+        <th>Prom. para tomar</th><th>Prom. para cerrar</th>
+      </tr></thead>
+      <tbody>
+        ${filasMetricas.map(m=>`
+          <tr>
+            <td>${escapeHtml(m.asesor_nombre || '—')}</td>
+            <td>${m.casos_cerrados ?? 0}</td>
+            <td>${m.casos_convertidos ?? 0}</td>
+            <td>${m.tasa_conversion_pct != null ? m.tasa_conversion_pct + '%' : '—'}</td>
+            <td>${m.minutos_promedio_para_tomar != null ? Math.round(m.minutos_promedio_para_tomar) + ' min' : '—'}</td>
+            <td>${m.minutos_promedio_para_cerrar != null ? Math.round(m.minutos_promedio_para_cerrar) + ' min' : '—'}</td>
+          </tr>
+        `).join('') || `<tr><td colspan="6" class="vacio">Sin asesores activos con casos todavía.</td></tr>`}
+      </tbody></table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('filtro-dias-rendimiento').addEventListener('change', e=>{
+    renderRendimientoAsesores(Number(e.target.value));
+  });
+}
 
 /* =========================================================
    DASHBOARD
