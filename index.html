@@ -821,8 +821,9 @@ const TABLAS = {
       {clave:'compra_id', etiqueta:'ID compra', tipo:'text', listado:true},
       {clave:'usuario_id', etiqueta:'Cliente (usuario_id)', tipo:'text', listado:true},
       {clave:'producto_id', etiqueta:'ID producto/evento', tipo:'text', listado:true},
-      {clave:'tipo_item', etiqueta:'Tipo', tipo:'select', opciones:['producto','evento'], listado:true},
-      {clave:'monto', etiqueta:'Monto', tipo:'number', listado:true},
+      {clave:'tipo_item', etiqueta:'Tipo', tipo:'select', opciones:['producto','experiencia'], listado:true},
+      {clave:'monto', etiqueta:'Monto (cobrado hoy)', tipo:'number', listado:true},
+      {clave:'monto_total_evento', etiqueta:'Precio total evento (solo reservas c/anticipo)', tipo:'number', listado:true},
       {clave:'moneda', etiqueta:'Moneda', tipo:'text'},
       {clave:'codigo_referido_usado', etiqueta:'Código de referido usado', tipo:'text'},
       {clave:'afiliado_n1_id', etiqueta:'Afiliado nivel 1', tipo:'text'},
@@ -901,9 +902,9 @@ const TABLAS = {
       {clave:'objeciones_comunes', etiqueta:'Objeciones comunes', tipo:'textarea'},
       {clave:'restricciones', etiqueta:'Restricciones', tipo:'textarea'},
       {clave:'notas_internas', etiqueta:'Notas internas', tipo:'textarea'},
-      {clave:'comision_n1', etiqueta:'Comisión N1 (%)', tipo:'number'},
-      {clave:'comision_n2', etiqueta:'Comisión N2 (%)', tipo:'number'},
-      {clave:'comision_n3', etiqueta:'Comisión N3 (%)', tipo:'number'},
+      {clave:'comision_n1', etiqueta:'Comisión N1 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
+      {clave:'comision_n2', etiqueta:'Comisión N2 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
+      {clave:'comision_n3', etiqueta:'Comisión N3 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
       {clave:'imagen_url', etiqueta:'URL imagen', tipo:'text'},
       {clave:'video_url', etiqueta:'URL video', tipo:'text'},
     ]
@@ -932,9 +933,9 @@ const TABLAS = {
       {clave:'restricciones', etiqueta:'Restricciones', tipo:'textarea'},
       {clave:'notas_internas', etiqueta:'Notas internas', tipo:'textarea'},
       {clave:'porcentaje_pago_requerido', etiqueta:'% de pago requerido (anticipo)', tipo:'number'},
-      {clave:'comision_n1', etiqueta:'Comisión N1 (%)', tipo:'number'},
-      {clave:'comision_n2', etiqueta:'Comisión N2 (%)', tipo:'number'},
-      {clave:'comision_n3', etiqueta:'Comisión N3 (%)', tipo:'number'},
+      {clave:'comision_n1', etiqueta:'Comisión N1 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
+      {clave:'comision_n2', etiqueta:'Comisión N2 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
+      {clave:'comision_n3', etiqueta:'Comisión N3 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
       {clave:'imagen_url', etiqueta:'URL imagen', tipo:'text'},
       {clave:'video_url', etiqueta:'URL video', tipo:'text'},
     ]
@@ -1406,6 +1407,15 @@ document.getElementById('form-modal').addEventListener('submit', async (e)=>{
 
   const errBox = document.getElementById('modal-error');
   errBox.classList.add('oculto');
+
+  const camposComision = ['comision_n1','comision_n2','comision_n3'];
+  for (const c of camposComision){
+    if (datos[c] != null && Number(datos[c]) > 1){
+      errBox.textContent = `"${c}" debe ser una fracción entre 0 y 1 (ej: 0.25 para 25%). Escribiste ${datos[c]}, que pagaría ${datos[c]*100}% de comisión.`;
+      errBox.classList.remove('oculto');
+      return;
+    }
+  }
 
   let resultado;
   if (fila){
