@@ -770,7 +770,12 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+  if (typeof Chart === 'undefined') {
+    console.error('Chart.js no cargo (posible bloqueo de red/CDN). El Dashboard no podra mostrar graficos hasta que esto se resuelva.');
+  }
+</script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -1771,6 +1776,7 @@ function activarFiltrosLote(){
 }
 
 async function renderComisionesPendientes(){
+  const puedeGestionarPagos = puedeEditar('comisiones');
   const cuerpo = document.getElementById('cuerpo-pagos-masivos');
   let consulta = sb.from('comisiones').select('*').eq('estado_comision','Pendiente').order('afiliado_id');
   if (filtroDesde) consulta = consulta.gte('fecha_generada', filtroDesde + 'T00:00:00');
@@ -2422,6 +2428,11 @@ async function renderDashboard(){
   cont.innerHTML = `<div class="cargando">Calculando métricas…</div>`;
   destruirGraficos();
 
+  if (typeof Chart === 'undefined'){
+    cont.innerHTML = `<div class="vacio">No se pudo cargar la librería de gráficos (Chart.js). Revisa tu conexión o recarga la página. Si persiste, puede que el CDN esté bloqueado en esta red.</div>`;
+    return;
+  }
+
   const [ { data: compras }, { data: comisiones }, { data: afiliados }, { data: clientes } ] = await Promise.all([
     sb.from('compras').select('monto, tipo_item, estado_compra, fecha_compra').order('fecha_compra', { ascending:true }),
     sb.from('comisiones').select('monto_comision, estado_comision, fecha_generada'),
@@ -2446,7 +2457,7 @@ async function renderDashboard(){
     if (clave in idxMes) clientesPorMes[idxMes[clave]] += 1;
   });
 
-  const ventasPorTipo = { producto:0, evento:0 };
+  const ventasPorTipo = { producto:0, experiencia:0 };
   (compras||[]).forEach(c=>{ ventasPorTipo[c.tipo_item] = (ventasPorTipo[c.tipo_item]||0) + Number(c.monto||0); });
 
   const comisionesPorEstado = {};
@@ -2481,7 +2492,7 @@ async function renderDashboard(){
 
   graficosActivos.push(new Chart(document.getElementById('g-tipo'), {
     type:'doughnut',
-    data:{ labels:['Productos','Eventos'], datasets:[{ data:[ventasPorTipo.producto||0, ventasPorTipo.evento||0], backgroundColor:['#2d503e','#d49741'], borderWidth:0 }] },
+    data:{ labels:['Productos','Experiencias'], datasets:[{ data:[ventasPorTipo.producto||0, ventasPorTipo.experiencia||0], backgroundColor:['#2d503e','#d49741'], borderWidth:0 }] },
   }));
 
   const estadosComision = Object.keys(comisionesPorEstado);
