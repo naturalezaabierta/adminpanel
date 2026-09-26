@@ -1362,7 +1362,8 @@ async function cargarVista(vista){
       if (u.rol === 'admin'){ u.permisos_resumen = 'Acceso total (admin)'; return; }
       const propios = mapa[u.id] || {};
       const partes = AREAS_PERMISO
-        .map(a=>({ etiqueta:a.etiqueta, nivel: propios[a.clave] || 'lectura' }))
+        .filter(a => propios[a.clave]) // solo áreas con permiso explícito asignado
+        .map(a=>({ etiqueta:a.etiqueta, nivel: propios[a.clave] }))
         .filter(p=> p.nivel !== 'sin_acceso')
         .map(p=> `${p.etiqueta} (${p.nivel==='editar'?'editar':'lectura'})`);
       u.permisos_resumen = partes.length ? partes.join(', ') : 'Sin permisos asignados';
