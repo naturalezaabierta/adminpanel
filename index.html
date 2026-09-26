@@ -770,6 +770,46 @@
   </div>
 </div>
 
+<div class="fondo-modal" id="fondo-modal-rrhh">
+  <div class="modal" style="max-width:460px;">
+    <h3 id="rrhh-titulo">Ficha RRHH del asesor</h3>
+    <p style="font-size:11.5px;color:var(--tinta-suave);margin:-6px 0 14px;">Datos personales sensibles: solo el propio asesor o un admin pueden verlos.</p>
+    <form id="form-rrhh">
+      <div class="rejilla">
+        <div class="campo ancho">
+          <label>Dirección de habitación</label>
+          <textarea id="rrhh-direccion"></textarea>
+        </div>
+        <div class="campo">
+          <label>Fecha de nacimiento</label>
+          <input type="date" id="rrhh-fecha-nacimiento">
+        </div>
+        <div class="campo">
+          <label>Cédula / documento de identidad</label>
+          <input type="text" id="rrhh-documento">
+        </div>
+        <div class="campo">
+          <label>Fecha de ingreso al equipo</label>
+          <input type="date" id="rrhh-fecha-ingreso">
+        </div>
+        <div class="campo">
+          <label>Contacto de emergencia (nombre)</label>
+          <input type="text" id="rrhh-emergencia-nombre">
+        </div>
+        <div class="campo ancho">
+          <label>Contacto de emergencia (teléfono)</label>
+          <input type="text" id="rrhh-emergencia-telefono">
+        </div>
+      </div>
+      <p class="error oculto" id="rrhh-error" style="color:var(--rojo-600);background:var(--rojo-50);padding:8px 12px;border-radius:var(--radio-sm);font-size:12px;margin-top:14px;"></p>
+      <div class="acciones">
+        <button type="button" class="secundario" id="rrhh-cancelar">Cancelar</button>
+        <button type="submit" id="rrhh-guardar">Guardar ficha</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script>
   if (typeof Chart === 'undefined') {
@@ -996,6 +1036,8 @@ const TABLAS = {
       {clave:'email', etiqueta:'Correo', tipo:'text', listado:true},
       {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
       {clave:'rol', etiqueta:'Rol', tipo:'select', opciones:['admin','lectura'], listado:true},
+      {clave:'permisos_resumen', etiqueta:'Permisos por área', tipo:'readonly', listado:true},
+      {clave:'activo', etiqueta:'Activo', tipo:'select', opciones:['true','false'], listado:true},
       {clave:'creado_en', etiqueta:'Desde', tipo:'readonly', listado:true},
     ]
   },
@@ -1308,42 +1350,121 @@ async function cargarVista(vista){
     return;
   }
   filasCache = data || [];
+
+  if (vista === 'usuarios_panel'){
+    const { data: permisos } = await sb.from('permisos_area').select('*');
+    const mapa = {};
+    (permisos||[]).forEach(p=>{
+      mapa[p.usuario_id] = mapa[p.usuario_id] || {};
+      mapa[p.usuario_id][p.area] = p.nivel;
+    });
+    filasCache.forEach(u=>{
+      if (u.rol === 'admin'){ u.permisos_resumen = 'Acceso total (admin)'; return; }
+      const propios = mapa[u.id] || {};
+      const partes = AREAS_PERMISO
+        .map(a=>({ etiqueta:a.etiqueta, nivel: propios[a.clave] || 'lectura' }))
+        .filter(p=> p.nivel !== 'sin_acceso')
+        .map(p=> `${p.etiqueta} (${p.nivel==='editar'?'editar':'lectura'})`);
+      u.permisos_resumen = partes.length ? partes.join(', ') : 'Sin permisos asignados';
+    });
+  }
+
   document.getElementById('subtitulo-vista').textContent = `${filasCache.length} registro(s) encontrado(s)`;
   renderTabla(vista, filasCache);
 }
+
+const FILAS_POR_PAGINA_DEFECTO = 25;
+let paginacionTabla = { pagina: 1, porPagina: FILAS_POR_PAGINA_DEFECTO };
 
 function renderTabla(vista, filas){
   const t = TABLAS[vista];
   const cols = t.columnas.filter(c=>c.listado !== false && (c.listado === true));
   const colsMostrar = cols.length ? cols : t.columnas.slice(0,5);
+  const mostrarAcciones = puedeEditar(vista) || vista === 'usuarios_panel' || vista === 'asesores';
+  paginacionTabla = { pagina: 1, porPagina: FILAS_POR_PAGINA_DEFECTO };
 
   let html = `
     <div class="panel-tabla">
-      <div class="barra">
-        <input type="search" placeholder="🔍  Buscar en esta tabla…" id="buscador-tabla">
+      <div class="barra" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between;">
+        <input type="search" placeholder="🔍  Buscar en esta tabla…" id="buscador-tabla" style="flex:1;min-width:180px;">
+        <label style="font-size:12px;color:var(--tinta-suave);display:flex;align-items:center;gap:6px;white-space:nowrap;">
+          Filas por página:
+          <select id="sel-por-pagina" style="padding:4px 8px;font-size:12px;">
+            <option value="25">25</option>
+            <option value="50">50</option>
+          </select>
+        </label>
       </div>
       <div style="overflow-x:auto;">
       <table class="datos"><thead><tr>`;
   colsMostrar.forEach(c=> html += `<th>${c.etiqueta}</th>`);
-  if (puedeEditar(vista)) html += `<th style="text-align:right;">Acciones</th>`;
-  html += `</tr></thead><tbody id="cuerpo-tabla"></tbody></table></div></div>`;
+  if (mostrarAcciones) html += `<th style="text-align:right;">Acciones</th>`;
+  html += `</tr></thead><tbody id="cuerpo-tabla"></tbody></table></div>
+      <div id="paginador-tabla" style="display:flex;gap:6px;align-items:center;justify-content:center;padding:12px;flex-wrap:wrap;"></div>
+      </div>`;
   document.getElementById('contenido-vista').innerHTML = html;
 
-  function pintar(lista){
+  let listaActual = filas;
+
+  function botonesAccion(vista, fila){
+    let botones = '';
+    if (puedeEditar(vista)){
+      botones += `<button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__editarFila('${vista}','${fila[t.pk]}')">Editar</button>`;
+    }
+    if (vista === 'usuarios_panel' || vista === 'asesores'){
+      const estaActivo = fila.activo !== false;
+      botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__toggleActivo('${vista}','${fila[t.pk]}',${estaActivo})">${estaActivo ? 'Suspender' : 'Reactivar'}</button>`;
+    }
+    if (vista === 'asesores'){
+      botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__abrirFichaRRHH('${fila[t.pk]}')">Ficha RRHH</button>`;
+    }
+    return botones;
+  }
+
+  function pintarPagina(){
     const cuerpo = document.getElementById('cuerpo-tabla');
-    if (!lista.length){
+    if (!listaActual.length){
       cuerpo.innerHTML = `<tr><td colspan="${colsMostrar.length+1}"><div class="vacio">No hay registros todavía.</div></td></tr>`;
+      document.getElementById('paginador-tabla').innerHTML = '';
       return;
     }
-    cuerpo.innerHTML = lista.map(fila=>{
+    const porPagina = paginacionTabla.porPagina;
+    const totalPaginas = Math.max(1, Math.ceil(listaActual.length / porPagina));
+    if (paginacionTabla.pagina > totalPaginas) paginacionTabla.pagina = totalPaginas;
+    const inicio = (paginacionTabla.pagina - 1) * porPagina;
+    const pageItems = listaActual.slice(inicio, inicio + porPagina);
+
+    cuerpo.innerHTML = pageItems.map(fila=>{
       let tds = colsMostrar.map(c=>`<td title="${escapeHtml(String(fila[c.clave] ?? ''))}">${formatoCelda(fila[c.clave], c)}</td>`).join('');
-      if (puedeEditar(vista)){
-        tds += `<td style="text-align:right;"><button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__editarFila('${vista}','${fila[t.pk]}')">Editar</button></td>`;
-      }
+      if (mostrarAcciones) tds += `<td style="text-align:right;white-space:nowrap;">${botonesAccion(vista, fila)}</td>`;
       return `<tr>${tds}</tr>`;
     }).join('');
+
+    const pag = document.getElementById('paginador-tabla');
+    if (totalPaginas <= 1){ pag.innerHTML = ''; return; }
+    let tabs = '';
+    for (let p=1; p<=totalPaginas; p++){
+      tabs += `<button class="secundario" style="padding:4px 10px;font-size:12px;${p===paginacionTabla.pagina?'background:var(--verde-600);color:#fff;':''}" data-pagina="${p}">${p}</button>`;
+    }
+    pag.innerHTML = `<span style="font-size:12px;color:var(--tinta-suave);margin-right:6px;">${listaActual.length} registro(s) · página ${paginacionTabla.pagina} de ${totalPaginas}</span>${tabs}`;
+    pag.querySelectorAll('button[data-pagina]').forEach(b=>{
+      b.addEventListener('click', ()=>{ paginacionTabla.pagina = Number(b.dataset.pagina); pintarPagina(); });
+    });
+  }
+
+  function pintar(lista){
+    listaActual = lista;
+    paginacionTabla.pagina = 1;
+    pintarPagina();
   }
   pintar(filas);
+
+  document.getElementById('sel-por-pagina').value = String(paginacionTabla.porPagina);
+  document.getElementById('sel-por-pagina').addEventListener('change', (e)=>{
+    paginacionTabla.porPagina = Number(e.target.value);
+    paginacionTabla.pagina = 1;
+    pintarPagina();
+  });
 
   document.getElementById('buscador-tabla').addEventListener('input', (e)=>{
     const q = e.target.value.toLowerCase();
@@ -1351,6 +1472,15 @@ function renderTabla(vista, filas){
     pintar(filtradas);
   });
 }
+
+window.__toggleActivo = async (vista, pkValor, estaActivo)=>{
+  const t = TABLAS[vista];
+  const accion = estaActivo ? 'suspender' : 'reactivar';
+  if (!confirm(`¿Seguro que quieres ${accion} este registro?`)) return;
+  const { error } = await sb.from(vista).update({ activo: !estaActivo }).eq(t.pk, pkValor);
+  if (error){ alert('No se pudo actualizar: ' + error.message); return; }
+  cargarVista(vista);
+};
 
 function formatoCelda(valor, columna){
   if (valor === null || valor === undefined || valor === '') return '<span style="color:#b4c0b7;">—</span>';
@@ -2128,6 +2258,70 @@ const ROLES_PANEL = [
       {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'lectura'},
       {area:'creativos',nivel:'lectura'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
 ];
+
+/* =========================================================
+   FICHA RRHH DEL ASESOR (tabla asesores_datos_rrhh, aparte de asesores
+   por RLS: solo el propio asesor o un admin la ven)
+   ========================================================= */
+let rrhhAsesorId = null;
+
+window.__abrirFichaRRHH = async (asesorId)=>{
+  rrhhAsesorId = asesorId;
+  const err = document.getElementById('rrhh-error');
+  err.classList.add('oculto');
+  ['rrhh-direccion','rrhh-fecha-nacimiento','rrhh-documento','rrhh-fecha-ingreso','rrhh-emergencia-nombre','rrhh-emergencia-telefono']
+    .forEach(id=> document.getElementById(id).value = '');
+
+  const fila = filasCache.find(f=> String(f.id) === String(asesorId));
+  document.getElementById('rrhh-titulo').textContent = fila ? `Ficha RRHH · ${fila.nombre||''} ${fila.apellido||''}` : 'Ficha RRHH del asesor';
+
+  document.getElementById('fondo-modal-rrhh').classList.add('activo');
+
+  const { data, error } = await sb.from('asesores_datos_rrhh').select('*').eq('asesor_id', asesorId).maybeSingle();
+  if (error && error.code !== 'PGRST116'){
+    err.textContent = 'No se pudo cargar la ficha: ' + error.message;
+    err.classList.remove('oculto');
+    return;
+  }
+  if (data){
+    document.getElementById('rrhh-direccion').value = data.direccion_habitacion || '';
+    document.getElementById('rrhh-fecha-nacimiento').value = data.fecha_nacimiento || '';
+    document.getElementById('rrhh-documento').value = data.documento_identidad || '';
+    document.getElementById('rrhh-fecha-ingreso').value = data.fecha_ingreso || '';
+    document.getElementById('rrhh-emergencia-nombre').value = data.contacto_emergencia_nombre || '';
+    document.getElementById('rrhh-emergencia-telefono').value = data.contacto_emergencia_telefono || '';
+  }
+};
+document.getElementById('rrhh-cancelar').addEventListener('click', ()=>{
+  document.getElementById('fondo-modal-rrhh').classList.remove('activo');
+});
+document.getElementById('fondo-modal-rrhh').addEventListener('click', (e)=>{
+  if (e.target.id === 'fondo-modal-rrhh') document.getElementById('fondo-modal-rrhh').classList.remove('activo');
+});
+document.getElementById('form-rrhh').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('rrhh-guardar');
+  const err = document.getElementById('rrhh-error');
+  err.classList.add('oculto');
+  const payload = {
+    asesor_id: rrhhAsesorId,
+    direccion_habitacion: document.getElementById('rrhh-direccion').value.trim() || null,
+    fecha_nacimiento: document.getElementById('rrhh-fecha-nacimiento').value || null,
+    documento_identidad: document.getElementById('rrhh-documento').value.trim() || null,
+    fecha_ingreso: document.getElementById('rrhh-fecha-ingreso').value || null,
+    contacto_emergencia_nombre: document.getElementById('rrhh-emergencia-nombre').value.trim() || null,
+    contacto_emergencia_telefono: document.getElementById('rrhh-emergencia-telefono').value.trim() || null,
+  };
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  const { error } = await sb.from('asesores_datos_rrhh').upsert(payload, { onConflict: 'asesor_id' });
+  btn.disabled = false; btn.textContent = 'Guardar ficha';
+  if (error){
+    err.textContent = 'No se pudo guardar: ' + error.message;
+    err.classList.remove('oculto');
+    return;
+  }
+  document.getElementById('fondo-modal-rrhh').classList.remove('activo');
+});
 
 function abrirModalNuevoUsuario(){
   document.getElementById('nu-nombre').value = '';
