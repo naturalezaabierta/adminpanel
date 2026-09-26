@@ -2248,28 +2248,35 @@ const AREAS_PERMISO = [
   { clave:'creativos', etiqueta:'Creativos' },
   { clave:'catalogo', etiqueta:'Catálogo' },
   { clave:'atencion_publico', etiqueta:'Atención al público' },
+  { clave:'distribuidores', etiqueta:'Distribuidores' },
 ];
 
 const ROLES_PANEL = [
   { valor:'admin', etiqueta:'Administrador (acceso total)', rolDb:'admin', permisos:[] },
   { valor:'pedidos_envios', etiqueta:'Pedidos y envíos', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'editar'},{area:'pagos_referidos',nivel:'sin_acceso'},
-      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'},
+      {area:'distribuidores',nivel:'sin_acceso'} ] },
   { valor:'pagos_referidos', etiqueta:'Pagos a referidos', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'editar'},
-      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'},
+      {area:'distribuidores',nivel:'lectura'} ] },
   { valor:'creativos', etiqueta:'Creativos', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
-      {area:'creativos',nivel:'editar'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
+      {area:'creativos',nivel:'editar'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'},
+      {area:'distribuidores',nivel:'sin_acceso'} ] },
   { valor:'catalogo', etiqueta:'Catálogo', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
-      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'editar'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'editar'},{area:'atencion_publico',nivel:'sin_acceso'},
+      {area:'distribuidores',nivel:'sin_acceso'} ] },
   { valor:'atencion_publico', etiqueta:'Atención al público (asesor)', rolDb:'lectura', permisos:[
-      {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
-      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'editar'} ] },
+      {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'sin_acceso'},
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'editar'},
+      {area:'distribuidores',nivel:'lectura'} ] },
   { valor:'lectura', etiqueta:'Solo lectura general', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'lectura'},
-      {area:'creativos',nivel:'lectura'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'lectura'} ] },
+      {area:'creativos',nivel:'lectura'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'lectura'},
+      {area:'distribuidores',nivel:'lectura'} ] },
 ];
 
 /* =========================================================
