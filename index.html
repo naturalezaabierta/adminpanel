@@ -854,7 +854,7 @@ const TABLAS = {
     ]
   },
   afiliados: {
-    etiqueta: 'Afiliados', pk: 'afiliado_id', autoPk:false,
+    etiqueta: 'Afiliados', pk: 'afiliado_id', autoPk:false, area:'pagos_referidos',
     columnas: [
       {clave:'afiliado_id', etiqueta:'ID afiliado', tipo:'text', listado:true},
       {clave:'usuario_id', etiqueta:'ID de cliente vinculado', tipo:'text', listado:true},
@@ -903,7 +903,7 @@ const TABLAS = {
     ]
   },
   pagos: {
-    etiqueta:'Pagos', pk:'pago_id', autoPk:false,
+    etiqueta:'Pagos', pk:'pago_id', autoPk:false, area:'pagos_referidos',
     columnas:[
       {clave:'pago_id', etiqueta:'ID pago', tipo:'text', listado:true},
       {clave:'compra_id', etiqueta:'Compra asociada', tipo:'text', listado:true},
@@ -1042,7 +1042,7 @@ const TABLAS = {
     ]
   },
   asesores: {
-    etiqueta:'Cuentas de asesores', pk:'id', autoPk:false, area:'atencion_publico',
+    etiqueta:'Cuentas de asesores', pk:'id', autoPk:false, adminSolo:true,
     columnas:[
       {clave:'id', etiqueta:'UID de Supabase Auth', tipo:'readonly', listado:true},
       {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
@@ -1256,17 +1256,21 @@ function mostrarApp(){
   } else {
     Object.keys(TABLAS).forEach(vista=>{
       const t = TABLAS[vista];
-      if (t.area && misPermisos[t.area] === 'sin_acceso'){
+      const oculto = t.adminSolo || (t.area && misPermisos[t.area] === 'sin_acceso');
+      if (oculto){
         document.querySelector(`#nav-principal .enlace[data-vista="${vista}"]`)?.classList.add('oculto');
       }
     });
     if (misPermisos['pedidos_envios'] === 'sin_acceso'){
       document.querySelector('#nav-principal .enlace[data-vista="envios"]')?.classList.add('oculto');
     }
-    if (misPermisos['pagos_referidos'] === 'sin_acceso'){
+    // Pagos masivos: hace falta "editar" en pagos_referidos, la sola lectura no basta.
+    if (misPermisos['pagos_referidos'] !== 'editar'){
       document.querySelector('#nav-principal .enlace[data-vista="pagosmasivos"]')?.classList.add('oculto');
-      document.querySelector('#nav-principal .enlace[data-vista="metodos_pago"]')?.classList.add('oculto');
     }
+    // Métodos de pago y Rendimiento de asesores: exclusivos de admin, sin importar el área.
+    document.querySelector('#nav-principal .enlace[data-vista="metodos_pago"]')?.classList.add('oculto');
+    document.querySelector('#nav-principal .enlace[data-vista="rendimiento_asesores"]')?.classList.add('oculto');
   }
   cargarVista('dashboard');
 }
@@ -1298,7 +1302,7 @@ async function cargarVista(vista){
   marcarNavActiva(vista);
   document.getElementById('acciones-vista').innerHTML = '';
   if (vista === 'pagosmasivos'){
-    if (!esAdmin && misPermisos['pagos_referidos'] === 'sin_acceso') return mostrarSinAcceso('Pagos masivos');
+    if (!esAdmin && misPermisos['pagos_referidos'] !== 'editar') return mostrarSinAcceso('Pagos masivos');
     document.getElementById('titulo-vista').textContent = 'Pagos masivos';
     document.getElementById('subtitulo-vista').textContent = 'Agrupa comisiones pendientes por afiliado y regístralas como pagadas.';
     return renderPagosMasivos();
@@ -1320,7 +1324,7 @@ async function cargarVista(vista){
     return renderPermisosArea();
   }
   if (vista === 'metodos_pago'){
-    if (!esAdmin && misPermisos['pagos_referidos'] === 'sin_acceso') return mostrarSinAcceso('Métodos de pago');
+    if (!esAdmin) return mostrarSinAcceso('Métodos de pago');
     document.getElementById('titulo-vista').textContent = 'Métodos de pago';
     document.getElementById('subtitulo-vista').textContent = 'Las cuentas donde tus clientes te pagan (lo que ven en la página de pagos).';
     if (puedeEditar('comisiones')){
@@ -1332,7 +1336,7 @@ async function cargarVista(vista){
     return renderMetodosPago();
   }
   if (vista === 'rendimiento_asesores'){
-    if (!esAdmin && misPermisos['atencion_publico'] === 'sin_acceso') return mostrarSinAcceso('Rendimiento de asesores');
+    if (!esAdmin) return mostrarSinAcceso('Rendimiento de asesores');
     document.getElementById('titulo-vista').textContent = 'Rendimiento de asesores';
     document.getElementById('subtitulo-vista').textContent = 'Quién cierra más, quién convierte más, y quién se está quedando atrás.';
     return renderRendimientoAsesores();
@@ -1522,14 +1526,16 @@ function escapeHtml(s){
 function puedeEditar(vista){
   if (esAdmin) return true;
   const t = TABLAS[vista];
-  if (!t || !t.area) return false;
+  if (!t || t.adminSolo) return false;
+  if (!t.area) return false;
   return misPermisos[t.area] === 'editar';
 }
 
 function puedeVer(vista){
   if (esAdmin) return true;
   const t = TABLAS[vista];
-  if (!t || !t.area) return true;
+  if (!t || t.adminSolo) return false;
+  if (!t.area) return true;
   return misPermisos[t.area] !== 'sin_acceso';
 }
 
@@ -1645,8 +1651,8 @@ document.getElementById('modal-eliminar').onclick = async ()=>{
 
 /* =========================================================
    MÉTODOS DE PAGO (cuentas donde nos pagan los clientes)
-   Tabla: metodos_pago. Permisos = área "pagos_referidos"
-   (mismas reglas RLS que ya existen: lectura para ver, editar para cambiar).
+   Tabla: metodos_pago. Acceso exclusivo de administración (ni siquiera
+   "Pagos a referidos" lo edita, para evitar que se cargue una cuenta que no es).
    ========================================================= */
 const TIPOS_METODO_BASE = ['Pago Móvil','Zelle','Binance','PayPal','Zinli'];
 const ICONOS_METODO = { 'Pago Móvil':'📱', 'Zelle':'💵', 'Binance':'🟡', 'PayPal':'🅿️', 'Zinli':'🔷' };
@@ -2263,15 +2269,15 @@ const ROLES_PANEL = [
       {area:'distribuidores',nivel:'lectura'} ] },
   { valor:'creativos', etiqueta:'Creativos', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
-      {area:'creativos',nivel:'editar'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'},
+      {area:'creativos',nivel:'editar'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'sin_acceso'},
       {area:'distribuidores',nivel:'sin_acceso'} ] },
   { valor:'catalogo', etiqueta:'Catálogo', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
       {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'editar'},{area:'atencion_publico',nivel:'sin_acceso'},
       {area:'distribuidores',nivel:'sin_acceso'} ] },
   { valor:'atencion_publico', etiqueta:'Atención al público (asesor)', rolDb:'lectura', permisos:[
-      {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'sin_acceso'},
-      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'editar'},
+      {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'lectura'},
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'editar'},
       {area:'distribuidores',nivel:'lectura'} ] },
   { valor:'lectura', etiqueta:'Solo lectura general', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'lectura'},
