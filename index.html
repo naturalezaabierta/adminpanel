@@ -832,7 +832,7 @@ let filasCache = [];
 
 const TABLAS = {
   clientes: {
-    etiqueta: 'Clientes', pk: 'usuario_id', autoPk: false,
+    etiqueta: 'Clientes', pk: 'usuario_id', autoPk: false, area:'pedidos_envios',
     columnas: [
       {clave:'usuario_id', etiqueta:'ID usuario (teléfono)', tipo:'text', listado:true},
       {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
@@ -893,7 +893,7 @@ const TABLAS = {
     ]
   },
   empresas_envio: {
-    etiqueta: 'Empresas de envío', pk:'id', autoPk:true, area:'pedidos_envios',
+    etiqueta: 'Empresas de envío', pk:'id', autoPk:true, area:'pedidos_envios', editarAdminSolo:true,
     columnas: [
       {clave:'id', etiqueta:'ID', tipo:'readonly', listado:true},
       {clave:'nombre', etiqueta:'Nombre', tipo:'text', listado:true},
@@ -1022,7 +1022,7 @@ const TABLAS = {
     ]
   },
   config: {
-    etiqueta:'Configuración', pk:'campo', autoPk:false,
+    etiqueta:'Configuración', pk:'campo', autoPk:false, adminSolo:true,
     columnas:[
       {clave:'campo', etiqueta:'Campo', tipo:'text', listado:true},
       {clave:'valor', etiqueta:'Valor', tipo:'textarea', listado:true},
@@ -1030,7 +1030,7 @@ const TABLAS = {
     ]
   },
   usuarios_panel: {
-    etiqueta:'Usuarios del panel', pk:'id', autoPk:false,
+    etiqueta:'Usuarios del panel', pk:'id', autoPk:false, adminSolo:true,
     columnas:[
       {clave:'id', etiqueta:'UID de Supabase Auth', tipo:'readonly', listado:true},
       {clave:'email', etiqueta:'Correo', tipo:'text', listado:true},
@@ -1272,7 +1272,12 @@ function mostrarApp(){
     document.querySelector('#nav-principal .enlace[data-vista="metodos_pago"]')?.classList.add('oculto');
     document.querySelector('#nav-principal .enlace[data-vista="rendimiento_asesores"]')?.classList.add('oculto');
   }
-  cargarVista('dashboard');
+  if (esAdmin){
+    cargarVista('dashboard');
+  } else {
+    const primeraDisponible = document.querySelector('#nav-principal .enlace:not(.oculto)');
+    cargarVista(primeraDisponible ? primeraDisponible.dataset.vista : 'dashboard');
+  }
 }
 
 /* =========================================================
@@ -1308,6 +1313,7 @@ async function cargarVista(vista){
     return renderPagosMasivos();
   }
   if (vista === 'dashboard'){
+    if (!esAdmin) return mostrarSinAcceso('Dashboard');
     document.getElementById('titulo-vista').textContent = 'Dashboard';
     document.getElementById('subtitulo-vista').textContent = 'Evolución de ventas, comisiones y clientes.';
     return renderDashboard();
@@ -1319,6 +1325,7 @@ async function cargarVista(vista){
     return renderEnvios();
   }
   if (vista === 'permisos_area'){
+    if (!esAdmin) return mostrarSinAcceso('Permisos por área');
     document.getElementById('titulo-vista').textContent = 'Permisos por área';
     document.getElementById('subtitulo-vista').textContent = 'Quién puede editar o solo ver cada área del panel.';
     return renderPermisosArea();
@@ -1342,6 +1349,7 @@ async function cargarVista(vista){
     return renderRendimientoAsesores();
   }
   if (vista === 'auditoria'){
+    if (!esAdmin) return mostrarSinAcceso('Auditoría');
     document.getElementById('titulo-vista').textContent = 'Auditoría';
     document.getElementById('subtitulo-vista').textContent = 'Quién cambió qué, y cuándo.';
     return renderAuditoria();
@@ -1526,7 +1534,7 @@ function escapeHtml(s){
 function puedeEditar(vista){
   if (esAdmin) return true;
   const t = TABLAS[vista];
-  if (!t || t.adminSolo) return false;
+  if (!t || t.adminSolo || t.editarAdminSolo) return false;
   if (!t.area) return false;
   return misPermisos[t.area] === 'editar';
 }
