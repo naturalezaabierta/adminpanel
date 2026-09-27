@@ -2284,9 +2284,12 @@ const ROLES_PANEL = [
       {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'editar'},{area:'atencion_publico',nivel:'sin_acceso'},
       {area:'distribuidores',nivel:'sin_acceso'} ] },
   { valor:'atencion_publico', etiqueta:'Atención al público (asesor)', rolDb:'lectura', permisos:[
-      {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'lectura'},
-      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'editar'},
-      {area:'distribuidores',nivel:'lectura'} ] },
+      // El asesor no entra a este panel: atiende todo desde su propio CRM aparte
+      // (crm.naturalezaabierta.com), donde sí ve clientes/compras/pagos/etc. Aquí solo se
+      // le crea la cuenta -- de ahí en adelante inicia sesión por el CRM, no por acá.
+      {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'editar'},
+      {area:'distribuidores',nivel:'sin_acceso'} ] },
   { valor:'lectura', etiqueta:'Solo lectura general', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'lectura'},
       {area:'creativos',nivel:'lectura'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'lectura'},
