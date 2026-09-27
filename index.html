@@ -1053,7 +1053,7 @@ const TABLAS = {
     ]
   },
   inventario_distribuidor: {
-    etiqueta:'Inventario de distribuidores', pk:'id', autoPk:true, area:'distribuidores',
+    etiqueta:'Inventario de distribuidores', pk:'id', autoPk:true, adminSolo:true,
     columnas:[
       {clave:'id', etiqueta:'ID', tipo:'readonly', listado:true},
       {clave:'afiliado_id', etiqueta:'ID del distribuidor', tipo:'text', listado:true},
@@ -1064,7 +1064,7 @@ const TABLAS = {
     ]
   },
   ventas_distribuidor: {
-    etiqueta:'Ventas de distribuidores', pk:'id', autoPk:true, area:'distribuidores',
+    etiqueta:'Ventas de distribuidores', pk:'id', autoPk:true, adminSolo:true,
     columnas:[
       {clave:'id', etiqueta:'ID', tipo:'readonly', listado:true},
       {clave:'afiliado_id', etiqueta:'ID del distribuidor', tipo:'text', listado:true},
@@ -2262,38 +2262,33 @@ const AREAS_PERMISO = [
   { clave:'creativos', etiqueta:'Creativos' },
   { clave:'catalogo', etiqueta:'Catálogo' },
   { clave:'atencion_publico', etiqueta:'Atención al público' },
-  { clave:'distribuidores', etiqueta:'Distribuidores' },
+  // 'distribuidores' ya no es un área configurable: Inventario/Ventas de distribuidores
+  // pasaron a ser exclusivos de administración (adminSolo), nadie más los ve desde el panel.
 ];
 
 const ROLES_PANEL = [
   { valor:'admin', etiqueta:'Administrador (acceso total)', rolDb:'admin', permisos:[] },
   { valor:'pedidos_envios', etiqueta:'Pedidos y envíos', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'editar'},{area:'pagos_referidos',nivel:'sin_acceso'},
-      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'},
-      {area:'distribuidores',nivel:'sin_acceso'} ] },
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
   { valor:'pagos_referidos', etiqueta:'Pagos a referidos', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'editar'},
-      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'},
-      {area:'distribuidores',nivel:'lectura'} ] },
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
   { valor:'creativos', etiqueta:'Creativos', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
-      {area:'creativos',nivel:'editar'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'sin_acceso'},
-      {area:'distribuidores',nivel:'sin_acceso'} ] },
+      {area:'creativos',nivel:'editar'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
   { valor:'catalogo', etiqueta:'Catálogo', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
-      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'editar'},{area:'atencion_publico',nivel:'sin_acceso'},
-      {area:'distribuidores',nivel:'sin_acceso'} ] },
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'editar'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
   { valor:'atencion_publico', etiqueta:'Atención al público (asesor)', rolDb:'lectura', permisos:[
       // El asesor no entra a este panel: atiende todo desde su propio CRM aparte
       // (crm.naturalezaabierta.com), donde sí ve clientes/compras/pagos/etc. Aquí solo se
       // le crea la cuenta -- de ahí en adelante inicia sesión por el CRM, no por acá.
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
-      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'editar'},
-      {area:'distribuidores',nivel:'sin_acceso'} ] },
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'editar'} ] },
   { valor:'lectura', etiqueta:'Solo lectura general', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'lectura'},
-      {area:'creativos',nivel:'lectura'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'lectura'},
-      {area:'distribuidores',nivel:'lectura'} ] },
+      {area:'creativos',nivel:'lectura'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'lectura'} ] },
 ];
 
 /* =========================================================
