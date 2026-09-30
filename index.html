@@ -586,6 +586,7 @@
     <nav id="nav-principal">
       <button class="enlace" data-vista="dashboard">📊 Dashboard</button>
       <div class="separador">Ventas y clientes</div>
+      <button class="enlace" data-vista="ficha_cliente">🔎 Ficha de cliente</button>
       <button class="enlace" data-vista="envios">📦 Envíos del día</button>
       <button class="enlace" data-vista="clientes">👥 Clientes</button>
       <button class="enlace" data-vista="compras">🛍️ Compras</button>
@@ -1263,6 +1264,7 @@ function mostrarApp(){
     });
     if (misPermisos['pedidos_envios'] === 'sin_acceso'){
       document.querySelector('#nav-principal .enlace[data-vista="envios"]')?.classList.add('oculto');
+      document.querySelector('#nav-principal .enlace[data-vista="ficha_cliente"]')?.classList.add('oculto');
     }
     // Pagos masivos: hace falta "editar" en pagos_referidos, la sola lectura no basta.
     if (misPermisos['pagos_referidos'] !== 'editar'){
@@ -1302,6 +1304,91 @@ function mostrarSinAcceso(nombreVista){
     `<div class="vacio">No tienes acceso a esta sección. Pídele a un administrador que te asigne permiso.</div>`;
 }
 
+/* =========================================================
+   FICHA ÚNICA DE CLIENTE
+   ========================================================= */
+const fdt = s => s ? new Date(s).toLocaleString('es-VE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+const fmn = (n,m) => (n===null||n===undefined) ? '—' : Number(n).toFixed(2)+' '+(m||'USD');
+const chip = (t,ok) => `<span style="display:inline-block;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:600;background:${ok===true?'#e3f4e8':ok===false?'#fdeaea':'#fff4dc'};color:${ok===true?'#1d6b35':ok===false?'#a12b2b':'#8a5a00'}">${escapeHtml(t||'—')}</span>`;
+const tabF = (cols, filas) => filas.length ? `<div style="overflow-x:auto"><table class="datos"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${filas.map(f=>`<tr>${f.map(v=>`<td>${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>` : '<div class="vacio" style="padding:14px">Sin registros.</div>';
+const secF = (t, html) => `<div class="tarjeta" style="margin-bottom:14px;gap:10px"><div style="font-weight:700;font-size:14px;color:var(--verde-950)">${t}</div>${html}</div>`;
+
+function renderFicha(){
+  document.getElementById('contenido-vista').innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <input id="ficha-q" placeholder="Nombre, cédula, teléfono, correo o código de afiliado" style="flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--borde);border-radius:8px;font-size:14px">
+      <button id="ficha-buscar">Buscar</button>
+    </div>
+    <div id="ficha-res"><div class="vacio">Escribe lo que sepas del cliente y te muestro todo su historial junto.</div></div>`;
+  const q = document.getElementById('ficha-q');
+  const buscar = async ()=>{
+    const v = q.value.trim(); if (!v) return;
+    const res = document.getElementById('ficha-res');
+    res.innerHTML = '<div class="cargando">Buscando…</div>';
+    const { data, error } = await sb.rpc('fn_ficha_cliente_admin', { p_busqueda: v });
+    if (error || data?.error) return res.innerHTML = `<div class="vacio">No se pudo buscar${data?.error==='sin_acceso'?': no tienes acceso a esta sección':''}.</div>`;
+    const c = data.coincidencias || [];
+    if (!c.length) return res.innerHTML = '<div class="vacio">No encontré ningún cliente con eso.</div>';
+    if (c.length === 1) return abrirFicha(c[0].usuario_id);
+    res.innerHTML = secF(`${c.length} coincidencias, toca una`, tabF(['Nombre','Teléfono','Cédula','Código afiliado'],
+      c.map(x=>[`<a href="#" data-uid="${escapeHtml(x.usuario_id)}" style="color:var(--verde-950);font-weight:600">${escapeHtml((x.nombre||'')+' '+(x.apellido||''))}</a>`, escapeHtml(x.telefono||'—'), escapeHtml(x.numero_cedula||'—'), escapeHtml(x.codigo_propio||'—')])));
+    res.querySelectorAll('a[data-uid]').forEach(a=>a.onclick=e=>{e.preventDefault();abrirFicha(a.dataset.uid);});
+  };
+  document.getElementById('ficha-buscar').onclick = buscar;
+  q.addEventListener('keydown', e=>{ if(e.key==='Enter') buscar(); });
+  q.focus();
+}
+
+async function abrirFicha(uid){
+  const res = document.getElementById('ficha-res');
+  res.innerHTML = '<div class="cargando">Cargando ficha…</div>';
+  const { data: f, error } = await sb.rpc('fn_ficha_cliente_admin', { p_usuario_id: uid });
+  if (error || f?.error) return res.innerHTML = '<div class="vacio">No se pudo cargar la ficha.</div>';
+  const c = f.cliente, compras = f.compras||[], pagos = f.pagos, af = f.afiliado, com = f.comisiones, casos = f.casos||[];
+  const pagada = x => /pagad/i.test(x.estado||'');
+  const pend = compras.filter(x=>!pagada(x) && !/cancel|rechaz/i.test(x.estado||''));
+  const sumaPor = arr => { const o={}; arr.forEach(x=>{const m=x.moneda||'USD'; o[m]=(o[m]||0)+Number(x.monto||0);}); return Object.keys(o).length ? Object.entries(o).map(([m,v])=>v.toFixed(2)+' '+m).join(' + ') : '0.00'; };
+  const enviosPend = compras.filter(x=>pagada(x) && x.tipo!=='evento' && /pendiente/i.test(x.envio_estado||''));
+  const comPend = (com||[]).filter(x=>/pendiente/i.test(x.estado||''));
+  const avisos = [];
+  if (pend.length) avisos.push(`💳 Tiene ${pend.length} compra(s) sin pagar (${sumaPor(pend)})`);
+  if (enviosPend.length) avisos.push(`📦 ${enviosPend.length} envío(s) pagado(s) sin despachar`);
+  if (af && !af.tiene_cuenta_portal) avisos.push('🔐 Es afiliado pero aún no tiene cuenta en el portal');
+  if (af && comPend.length) avisos.push(`💰 Comisiones por pagarle: ${comPend.reduce((s,x)=>s+Number(x.monto||0),0).toFixed(2)} USD`);
+  if (casos.some(x=>!/cerrad/i.test(x.estado||''))) avisos.push('🙋 Tiene un caso de atención abierto');
+  const kpi = (n,e)=>`<div class="tarjeta"><div class="num" style="font-size:20px">${n}</div><div class="etq">${e}</div></div>`;
+  const ev = [];
+  compras.forEach(x=>ev.push([x.fecha,'🛍️',`Compra de ${x.producto||'producto'} por ${fmn(x.monto,x.moneda)} (${x.estado||'—'})`]));
+  (pagos||[]).forEach(x=>ev.push([x.fecha,'💳',`Pago de ${fmn(x.monto)} por ${x.metodo||'—'}, ${x.estado||'—'}${x.referencia?' · ref '+x.referencia:''}`]));
+  compras.forEach(x=>{ if(x.fecha_envio) ev.push([x.fecha_envio,'📦',`Envío ${x.envio_estado||''}${x.guia?' · guía '+x.guia:''}`]); });
+  (com||[]).forEach(x=>{ ev.push([x.fecha,'💰',`Comisión N${x.nivel} de ${fmn(x.monto)} por compra de ${x.comprador||'un cliente'} (${x.estado||'—'})`]); if(x.fecha_pago) ev.push([x.fecha_pago,'✅',`Comisión de ${fmn(x.monto)} pagada`]); });
+  casos.forEach(x=>ev.push([x.fecha,'🙋',`Caso de atención: ${x.motivo||'sin motivo'} (${x.estado||'—'})`]));
+  ev.push([c.fecha_registro,'👤','Se registró como cliente']);
+  ev.sort((a,b)=>new Date(b[0])-new Date(a[0]));
+  res.innerHTML = `
+    <button id="ficha-volver" style="margin-bottom:10px">← Volver a buscar</button>
+    ${secF(escapeHtml(((c.nombre||'')+' '+(c.apellido||'')).trim()||'Cliente'),
+      `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px 18px;font-size:13px">
+        <div>📱 ${escapeHtml(c.telefono||'—')}</div><div>🪪 ${escapeHtml(c.numero_cedula||'—')}</div><div>✉️ ${escapeHtml(c.correo||'—')}</div>
+        <div>📍 ${escapeHtml(c.zona_estado_ciudad||'—')}</div><div>Estado: ${chip(c.estado_cliente, /activo/i.test(c.estado_cliente||'')?true:null)}</div><div>Etapa: ${escapeHtml(c.etapa_cliente||'—')}</div>
+        <div>Origen: ${escapeHtml(c.origen||'—')}</div><div>Interés: ${escapeHtml(c.producto_interes||c.intencion||'—')}</div><div>Último contacto: ${fdt(c.ultimo_contacto)}</div>
+        <div>Próximo seguimiento: ${fdt(c.proximo_seguimiento)}</div><div>Cliente desde: ${fdt(c.fecha_registro)}</div><div>Responsable: ${escapeHtml(c.responsable_caso||'—')}</div></div>`)}
+    ${avisos.length ? `<div class="tarjeta" style="margin-bottom:14px;background:#fff8e6;border-color:#f0dca6;gap:4px;font-size:13.5px">${avisos.map(a=>`<div>${a}</div>`).join('')}</div>` : ''}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px">
+      ${kpi(compras.length,'Compras')}${kpi(sumaPor(compras.filter(pagada)),'Total pagado')}${kpi(sumaPor(pend),'Pendiente de pago')}${af?kpi(Number(af.saldo||0).toFixed(2)+' USD','Saldo de comisiones'):''}
+    </div>
+    ${af ? secF('🤝 Afiliado · '+escapeHtml(af.codigo||''), `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px 18px;font-size:13px">
+        <div>Programa: ${escapeHtml(af.programa||'—')}</div><div>Portal: ${chip(af.tiene_cuenta_portal?'Con cuenta':'Sin cuenta', af.tiene_cuenta_portal)}</div><div>Referido por: ${escapeHtml(af.referido_por||'—')}</div>
+        <div>Referidos directos: ${af.referidos_directos||0}</div><div>Ventas referidas: ${fmn(af.ventas_referidas)}</div><div>Último pago recibido: ${fdt(af.ultimo_pago)}</div>
+        <div>Cobra por: ${escapeHtml(af.metodo_pago_preferido||'—')}</div>${af.datos_pago?`<div>Cuenta: ${escapeHtml(af.datos_pago)}</div>`:''}</div>`) : ''}
+    ${secF('🛍️ Compras y envíos', tabF(['Fecha','Producto','Monto','Estado','Envío','Destino'], compras.map(x=>[fdt(x.fecha), escapeHtml(x.producto||'—')+(x.cantidad_personas>1?` (${x.cantidad_personas} pers.)`:'')+(x.codigo_referido?`<br><small>código ${escapeHtml(x.codigo_referido)}</small>`:''), fmn(x.monto,x.moneda), chip(x.estado, pagada(x)), (x.tipo==='evento'?'—':chip(x.envio_estado,/envi|entreg/i.test(x.envio_estado||'')&&!/pendiente/i.test(x.envio_estado||'')?true:null))+(x.guia?`<br><small>guía ${escapeHtml(x.guia)}</small>`:''), escapeHtml([x.oficina,x.destino,x.direccion].filter(Boolean).join(' · ')||'—')])))}
+    ${pagos ? secF('💳 Pagos', tabF(['Fecha','Método','Referencia','Monto','Estado'], pagos.map(x=>[fdt(x.fecha), escapeHtml(x.metodo||'—'), escapeHtml(x.referencia||'—'), fmn(x.monto), chip(x.estado, /verific|aprob/i.test(x.estado||'')?true:null)]))) : ''}
+    ${com ? secF('💰 Comisiones que ha ganado', tabF(['Fecha','Por compra de','Nivel','Venta','Comisión','Estado'], com.map(x=>[fdt(x.fecha), escapeHtml(x.comprador||'—'), 'N'+x.nivel, fmn(x.monto_venta), fmn(x.monto), chip(x.estado, /pagad/i.test(x.estado||'')?true:null)]))) : ''}
+    ${casos.length ? secF('🙋 Atención al cliente', tabF(['Fecha','Motivo','Estado','Vendió'], casos.map(x=>[fdt(x.fecha), escapeHtml(x.motivo||'—'), chip(x.estado), x.convertido?'Sí':'No']))) : ''}
+    ${secF('🕒 Todo lo que ha pasado', `<div style="display:flex;flex-direction:column;gap:7px;font-size:13px">${ev.map(e=>`<div style="display:flex;gap:10px"><span style="color:var(--tinta-suave);min-width:118px">${fdt(e[0])}</span><span>${e[1]} ${escapeHtml(e[2])}</span></div>`).join('')}</div>`)}`;
+  document.getElementById('ficha-volver').onclick = renderFicha;
+}
+
 async function cargarVista(vista){
   vistaActual = vista;
   marcarNavActiva(vista);
@@ -1311,6 +1398,12 @@ async function cargarVista(vista){
     document.getElementById('titulo-vista').textContent = 'Pagos masivos';
     document.getElementById('subtitulo-vista').textContent = 'Agrupa comisiones pendientes por afiliado y regístralas como pagadas.';
     return renderPagosMasivos();
+  }
+  if (vista === 'ficha_cliente'){
+    if (!esAdmin && misPermisos['pedidos_envios'] === 'sin_acceso') return mostrarSinAcceso('Ficha de cliente');
+    document.getElementById('titulo-vista').textContent = 'Ficha de cliente';
+    document.getElementById('subtitulo-vista').textContent = 'Todo el historial de una persona en un solo lugar.';
+    return renderFicha();
   }
   if (vista === 'dashboard'){
     if (!esAdmin) return mostrarSinAcceso('Dashboard');
