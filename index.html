@@ -1529,6 +1529,9 @@ function renderTabla(vista, filas){
     if (puedeEditar(vista)){
       botones += `<button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__editarFila('${vista}','${fila[t.pk]}')">Editar</button>`;
     }
+    if ((vista === 'productos_servicios' || vista === 'eventos_experiencias') && puedeEditar(vista)){
+      botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__clonarFila('${vista}','${fila[t.pk]}')">Clonar</button>`;
+    }
     if (vista === 'usuarios_panel' || vista === 'asesores'){
       const estaActivo = fila.activo !== false;
       botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__toggleActivo('${vista}','${fila[t.pk]}',${estaActivo})">${estaActivo ? 'Suspender' : 'Reactivar'}</button>`;
@@ -1660,22 +1663,36 @@ window.__editarFila = (vista, pkValor)=>{
   abrirModal(vista, fila);
 };
 
+window.__clonarFila = (vista, pkValor)=>{
+  const t = TABLAS[vista];
+  const original = filasCache.find(f=> String(f[t.pk]) === String(pkValor));
+  if (!original) return;
+  const copia = { ...original };
+  copia[t.pk] = original[t.pk] + '-COPIA';
+  copia.estado = 'No Disponible';
+  if (vista === 'eventos_experiencias'){
+    copia.fecha = null;
+    copia.cupos_disponibles = 0;
+  }
+  abrirModal(vista, null, copia);
+};  
+
 /* =========================================================
    MODAL GENÉRICO CREAR / EDITAR
    ========================================================= */
 let modalContexto = { vista:null, fila:null };
 
-function abrirModal(vista, fila){
+function abrirModal(vista, fila, plantilla){
   const t = TABLAS[vista];
   modalContexto = { vista, fila };
-  document.getElementById('modal-titulo').textContent = fila ? `Editar ${t.etiqueta.toLowerCase()}` : `Nuevo registro · ${t.etiqueta}`;
+  document.getElementById('modal-titulo').textContent = fila ? `Editar ${t.etiqueta.toLowerCase()}` : (plantilla ? `Clonar · ${t.etiqueta}` : `Nuevo registro · ${t.etiqueta}`);
   document.getElementById('modal-error').classList.add('oculto');
   document.getElementById('modal-eliminar').classList.toggle('oculto', !fila);
 
   const campos = document.getElementById('modal-campos');
   campos.innerHTML = '';
   t.columnas.forEach(c=>{
-    const valorActual = fila ? (fila[c.clave] ?? '') : '';
+    const valorActual = fila ? (fila[c.clave] ?? '') : (plantilla ? (plantilla[c.clave] ?? '') : '');
     const soloLectura = c.tipo === 'readonly' || (fila && c.clave === t.pk);
     const div = document.createElement('div');
     div.className = 'campo' + (c.tipo==='textarea' ? ' ancho' : '');
