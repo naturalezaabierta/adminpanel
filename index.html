@@ -1536,6 +1536,9 @@ function renderTabla(vista, filas){
     if (vista === 'asesores'){
       botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__abrirFichaRRHH('${fila[t.pk]}')">Ficha RRHH</button>`;
     }
+    if (vista === 'compras' && esAdmin){
+      botones += ` <button class="peligro" style="padding:4px 10px;font-size:12px;" onclick="window.__borrarCompraCompleta('${fila[t.pk]}')">Borrar todo</button>`;
+    }
     return botones;
   }
 
@@ -1600,6 +1603,17 @@ window.__toggleActivo = async (vista, pkValor, estaActivo)=>{
   cargarVista(vista);
 };
 
+window.__borrarCompraCompleta = async (compraId)=>{
+  if (!confirm(`¿Borrar TODO lo de la compra ${compraId}? Se van sus pagos, comisiones y avisos de pago, y se devuelve el cupo si es un evento. El cliente se queda. Úsalo solo con pruebas.`)) return;
+  const { data, error } = await sb.rpc('fn_borrar_compra_admin', { p_compra_id: compraId });
+  if (error || data?.error){
+    const m = data?.error === 'comision_ya_en_lote_o_pagada' ? 'Una comisión de esta compra ya está en un lote o pagada, no se puede borrar.' : (error?.message || data?.error);
+    alert('No se pudo borrar: ' + m); return;
+  }
+  alert(`Listo. Borrado: ${data.pagos_borrados} pago(s), ${data.comisiones_borradas} comisión(es). Cupos devueltos: ${data.cupos_devueltos}.`);
+  cargarVista('compras');
+};
+  
 function formatoCelda(valor, columna){
   if (valor === null || valor === undefined || valor === '') return '<span style="color:#b4c0b7;">—</span>';
   
