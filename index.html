@@ -2984,6 +2984,147 @@ async function renderDashboard(){
 }
 
 /* =========================================================
+   REPORTE CONTABLE (solo admin)
+   ========================================================= */
+let mesReporte = new Date().toISOString().slice(0,7);
+let datosReporte = null;
+const usd2 = n => '$' + Number(n||0).toFixed(2);
+const sumaCampo = (arr, k) => arr.reduce((s,x)=> s + Number(x[k]||0), 0);
+
+async function renderReporteContable(){
+  const cont = document.getElementById('contenido-vista');
+  cont.innerHTML = '<div class="cargando">Armando el reporte…</div>';
+  const [a, m] = mesReporte.split('-').map(Number);
+  const sig = new Date(a, m, 1);
+  const hastaD = `${sig.getFullYear()}-${String(sig.getMonth()+1).padStart(2,'0')}-01`;
+  const desde = `${mesReporte}-01T00:00:00`, hasta = hastaD + 'T00:00:00';
+
+  const [rc, rm, rg] = await Promise.all([
+    sb.from('compras').select('compra_id, producto_id, tipo_item, monto, moneda, estado_compra, fecha_compra')
+      .gte('fecha_compra', desde).lt('fecha_compra', hasta).limit(5000),
+    sb.from('comisiones').select('comision_id, monto_comision, estado_comision, fecha_generada, fecha_pago_comision')
+      .or(`and(fecha_generada.gte.${desde},fecha_generada.lt.${hasta}),and(fecha_pago_comision.gte.${desde},fecha_pago_comision.lt.${hasta})`).limit(5000),
+    sb.from('gastos_manuales').select('*').gte('fecha', mesReporte + '-01').lt('fecha', hastaD).order('fecha', { ascending:true }),
+  ]);
+  const err = rc.error || rm.error || rg.error;
+  if (err){ cont.innerHTML = `<div class="vacio">No se pudo armar el reporte: ${txt(err.message)}</div>`; return; }
+
+  const compras = rc.data||[], comis = rm.data||[], gastos = rg.data||[];
+  const pagada = x => /pagad/i.test(x.estado_compra||'');
+  const esUsd = x => !x.moneda || /usd/i.test(x.moneda);
+  const ventas = compras.filter(pagada);
+  const ventasUsd = ventas.filter(esUsd);
+  const otrasMon = ventas.length - ventasUsd.length;
+  const vigente = c => !/cancel|anulad/i.test(c.estado_comision||'');
+  const enMes = f => (f||'').slice(0,7) === mesReporte;
+  const comGen = comis.filter(c => vigente(c) && enMes(c.fecha_generada));
+  const comPag = comis.filter(c => /pagad/i.test(c.estado_comision||'') && enMes(c.fecha_pago_comision));
+  const prod = ventasUsd.filter(x=>x.tipo_item==='producto'), exp = ventasUsd.filter(x=>x.tipo_item==='experiencia');
+  const ingresos = sumaCampo(ventasUsd,'monto'), totCG = sumaCampo(comGen,'monto_comision');
+  const totCP = sumaCampo(comPag,'monto_comision'), totG = sumaCampo(gastos,'monto');
+  const utilidad = ingresos - totCG - totG, caja = ingresos - totCP - totG;
+  datosReporte = { ingresos, totCG, totCP, totG, utilidad, caja, ventas: ventasUsd, comGen, comPag, gastos };
+
+  const tarj = (n, e, extra) => `<div class="tarjeta"><div class="num" style="${extra||''}">${n}</div><div class="etq">${e}</div></div>`;
+  cont.innerHTML = `
+    <div class="panel-tabla" style="margin-bottom:16px;">
+      <div class="barra">
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+          <div><label>Mes</label><input type="month" id="rep-mes" value="${mesReporte}"></div>
+          <button class="secundario" id="rep-csv" type="button">⬇️ Descargar CSV para el contador</button>
+        </div>
+      </div>
+    </div>
+    ${otrasMon ? `<div class="msg-permiso">Hay ${otrasMon} venta(s) en otra moneda que NO están sumadas aquí (el reporte es en USD). Revísalas aparte.</div>` : ''}
+    <div class="tarjetas-resumen">
+      ${tarj(usd2(ingresos), `Ventas cobradas (${ventasUsd.length})`)}
+      ${tarj(usd2(totCG), `Comisiones generadas (${comGen.length})`)}
+      ${tarj(usd2(totCP), `Comisiones pagadas en el mes (${comPag.length})`)}
+      ${tarj(usd2(totG), `Gastos manuales (${gastos.length})`)}
+      ${tarj(usd2(utilidad), 'Utilidad (ventas − comisiones generadas − gastos)', utilidad<0?'color:var(--rojo-600)':'')}
+      ${tarj(usd2(caja), 'Caja (ventas − comisiones pagadas − gastos)', caja<0?'color:var(--rojo-600)':'')}
+    </div>
+    <div class="panel-tabla" style="margin-bottom:16px;">
+      <div style="overflow-x:auto;"><table class="datos"><thead><tr><th>Ventas por tipo</th><th>Cantidad</th><th>Monto</th></tr></thead><tbody>
+        <tr><td>🌿 Productos</td><td>${prod.length}</td><td>${usd2(sumaCampo(prod,'monto'))}</td></tr>
+        <tr><td>🎫 Eventos y experiencias</td><td>${exp.length}</td><td>${usd2(sumaCampo(exp,'monto'))}</td></tr>
+      </tbody></table></div>
+    </div>
+    <h4>🧾 Gastos manuales del mes</h4>
+    <div class="panel-tabla" style="margin-bottom:16px;">
+      <form id="form-gasto" class="barra" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end;">
+        <div><label>Fecha</label><input type="date" id="g-fecha" required value="${new Date().toISOString().slice(0,10)}"></div>
+        <div><label>Concepto</label><input type="text" id="g-concepto" required placeholder="Ej: Publicidad"></div>
+        <div><label>Categoría</label><input type="text" id="g-categoria" placeholder="Ej: Marketing"></div>
+        <div><label>Monto (USD)</label><input type="number" id="g-monto" required min="0" step="0.01"></div>
+        <div><label>Nota</label><input type="text" id="g-nota"></div>
+        <button type="submit" id="g-guardar">+ Agregar gasto</button>
+      </form>
+      <p class="error oculto" id="g-error" style="color:var(--rojo-600);padding:0 20px 10px;margin:0;font-size:12px;"></p>
+      <div style="overflow-x:auto;"><table class="datos"><thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th>Monto</th><th>Nota</th><th></th></tr></thead><tbody>
+        ${gastos.map(g=>`<tr><td>${txt(g.fecha)}</td><td>${txt(g.concepto)}</td><td>${txt(g.categoria||'—')}</td><td>${usd2(g.monto)}</td><td>${txt(g.nota||'—')}</td>
+          <td style="text-align:right;"><button class="secundario" style="padding:4px 10px;font-size:12px;color:var(--rojo-600);" onclick="window.__borrarGasto('${txt(g.id)}')">Borrar</button></td></tr>`).join('')
+          || '<tr><td colspan="6"><div class="vacio">Sin gastos anotados este mes.</div></td></tr>'}
+      </tbody></table></div>
+    </div>`;
+
+  document.getElementById('rep-mes').addEventListener('change', e=>{ if (e.target.value){ mesReporte = e.target.value; renderReporteContable(); } });
+  document.getElementById('rep-csv').addEventListener('click', ()=> window.__csvReporte());
+  document.getElementById('form-gasto').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const btn = document.getElementById('g-guardar'), eb = document.getElementById('g-error');
+    eb.classList.add('oculto'); btn.disabled = true;
+    const { error } = await sb.from('gastos_manuales').insert({
+      fecha: document.getElementById('g-fecha').value,
+      concepto: document.getElementById('g-concepto').value.trim(),
+      categoria: document.getElementById('g-categoria').value.trim() || null,
+      monto: Number(document.getElementById('g-monto').value),
+      nota: document.getElementById('g-nota').value.trim() || null,
+    });
+    btn.disabled = false;
+    if (error){ eb.textContent = 'No se pudo guardar: ' + error.message; eb.classList.remove('oculto'); return; }
+    const f = document.getElementById('g-fecha').value;
+    if (f && f.slice(0,7) !== mesReporte) mesReporte = f.slice(0,7);
+    renderReporteContable();
+  });
+}
+
+window.__borrarGasto = async (id)=>{
+  if (!confirm('¿Borrar este gasto?')) return;
+  const { error } = await sb.from('gastos_manuales').delete().eq('id', id);
+  if (error){ alert('No se pudo borrar: ' + error.message); return; }
+  renderReporteContable();
+};
+
+window.__csvReporte = ()=>{
+  const d = datosReporte; if (!d) return;
+  const q = v => '"' + String(v ?? '').replace(/"/g,'""') + '"';
+  const f = [
+    ['Reporte contable', mesReporte], [],
+    ['RESUMEN (USD)'],
+    ['Ventas cobradas', d.ingresos.toFixed(2)],
+    ['Comisiones generadas', d.totCG.toFixed(2)],
+    ['Comisiones pagadas en el mes', d.totCP.toFixed(2)],
+    ['Gastos manuales', d.totG.toFixed(2)],
+    ['Utilidad', d.utilidad.toFixed(2)],
+    ['Caja', d.caja.toFixed(2)], [],
+    ['VENTAS COBRADAS'], ['Fecha','Compra','Producto/Evento','Tipo','Monto'],
+    ...d.ventas.map(v=>[(v.fecha_compra||'').slice(0,10), v.compra_id, v.producto_id, v.tipo_item, Number(v.monto||0).toFixed(2)]), [],
+    ['COMISIONES GENERADAS'], ['Fecha','Comisión','Estado','Monto'],
+    ...d.comGen.map(c=>[(c.fecha_generada||'').slice(0,10), c.comision_id, c.estado_comision, Number(c.monto_comision||0).toFixed(2)]), [],
+    ['COMISIONES PAGADAS'], ['Fecha de pago','Comisión','Monto'],
+    ...d.comPag.map(c=>[(c.fecha_pago_comision||'').slice(0,10), c.comision_id, Number(c.monto_comision||0).toFixed(2)]), [],
+    ['GASTOS MANUALES'], ['Fecha','Concepto','Categoría','Monto','Nota'],
+    ...d.gastos.map(g=>[g.fecha, g.concepto, g.categoria||'', Number(g.monto||0).toFixed(2), g.nota||'']),
+  ];
+  const csv = '\ufeff' + f.map(r=>r.map(q).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = `reporte-contable-${mesReporte}.csv`;
+  a.click();
+};
+
+/* =========================================================
    ARRANQUE
    ========================================================= */
 iniciarSesionSiCorresponde();
