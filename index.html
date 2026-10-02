@@ -1772,15 +1772,16 @@ document.getElementById('form-modal').addEventListener('submit', async (e)=>{
   }
 
   let resultado;
+  if (t.filtro) Object.assign(datos, t.filtro);
   if (fila){
-    resultado = await sb.from(vista).update(datos).eq(t.pk, fila[t.pk]);
+    resultado = await sb.from(t.tabla || vista).update(datos).eq(t.pk, fila[t.pk]);
   } else {
     if (!t.autoPk && (!datos[t.pk] || datos[t.pk]==='')){
       errBox.textContent = `El campo "${t.columnas.find(c=>c.clave===t.pk).etiqueta}" es obligatorio.`;
       errBox.classList.remove('oculto');
       return;
     }
-    resultado = await sb.from(vista).insert(datos);
+    resultado = await sb.from(t.tabla || vista).insert(datos);
   }
   if (resultado.error){
     errBox.textContent = resultado.error.message;
@@ -1795,7 +1796,7 @@ document.getElementById('modal-eliminar').onclick = async ()=>{
   const { vista, fila } = modalContexto;
   const t = TABLAS[vista];
   if (!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
-  const { error } = await sb.from(vista).delete().eq(t.pk, fila[t.pk]);
+  const { error } = await sb.from(t.tabla || vista).delete().eq(t.pk, fila[t.pk]);
   if (error){ alert('No se pudo eliminar: ' + error.message); return; }
   cerrarModal();
   cargarVista(vista);
