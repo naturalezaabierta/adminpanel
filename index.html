@@ -1552,6 +1552,9 @@ function renderTabla(vista, filas){
     if ((vista === 'productos_servicios' || vista === 'eventos_experiencias') && puedeEditar(vista)){
       botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__clonarFila('${vista}','${fila[t.pk]}')">Clonar</button>`;
     }
+    if (vista === 'eventos_experiencias'){
+      botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__verAsistentes('${fila[t.pk]}')">Asistentes</button>`;
+    }
     if (vista === 'usuarios_panel' || vista === 'asesores'){
       const estaActivo = fila.activo !== false;
       botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__toggleActivo('${vista}','${fila[t.pk]}',${estaActivo})">${estaActivo ? 'Suspender' : 'Reactivar'}</button>`;
@@ -1559,7 +1562,7 @@ function renderTabla(vista, filas){
     if (vista === 'asesores'){
       botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__abrirFichaRRHH('${fila[t.pk]}')">Ficha RRHH</button>`;
     }
-    if (vista === 'compras' && esAdmin){
+    if (vista === 'compras' || vista === 'reservas') && esAdmin){
       botones += ` <button class="peligro" style="padding:4px 10px;font-size:12px;" onclick="window.__borrarCompraCompleta('${fila[t.pk]}')">Borrar todo</button>`;
     }
     return botones;
@@ -1634,7 +1637,7 @@ window.__borrarCompraCompleta = async (compraId)=>{
     alert('No se pudo borrar: ' + m); return;
   }
   alert(`Listo. Borrado: ${data.pagos_borrados} pago(s), ${data.comisiones_borradas} comisión(es). Cupos devueltos: ${data.cupos_devueltos}.`);
-  cargarVista('compras');
+  cargarVista(vistaActual);
 };
   
 function formatoCelda(valor, columna){
