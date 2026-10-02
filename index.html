@@ -1613,7 +1613,7 @@ function renderTabla(vista, filas){
 
     cuerpo.innerHTML = pageItems.map(fila=>{
       let tds = colsMostrar.map(c=>`<td title="${escapeHtml(String(fila[c.clave] ?? ''))}">${formatoCelda(fila[c.clave], c)}</td>`).join('');
-      if (mostrarAcciones) tds += `<td style="text-align:right;white-space:nowrap;">${botonesAccion(vista, fila)}</td>`;
+      if (mostrarAcciones) tds += `<td style="text-align:right;white-space:nowrap;max-width:none;overflow:visible;">${botonesAccion(vista, fila)}</td>`;
       return `<tr>${tds}</tr>`;
     }).join('');
 
