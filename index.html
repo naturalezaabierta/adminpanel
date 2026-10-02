@@ -1565,7 +1565,7 @@ function renderTabla(vista, filas){
     if (vista === 'asesores'){
       botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__abrirFichaRRHH('${fila[t.pk]}')">Ficha RRHH</button>`;
     }
-    if (vista === 'compras' || vista === 'reservas') && esAdmin){
+    if ((vista === 'compras' || vista === 'reservas') && esAdmin){
       botones += ` <button class="peligro" style="padding:4px 10px;font-size:12px;" onclick="window.__borrarCompraCompleta('${fila[t.pk]}')">Borrar todo</button>`;
     }
     return botones;
