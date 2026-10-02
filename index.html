@@ -623,6 +623,7 @@
       <button class="enlace oculto" id="nav-permisos" data-vista="permisos_area">🔐 Permisos por área</button>
       <button class="enlace oculto" id="nav-usuarios" data-vista="usuarios_panel">👤 Usuarios del panel</button>
       <button class="enlace oculto" id="nav-auditoria" data-vista="auditoria">🕵️ Auditoría</button>
+      <button class="enlace oculto" id="nav-reporte" data-vista="reporte_contable">📑 Reporte contable</button>
     </nav>
     <div class="pie-usuario">
       <div class="usuario-info-box">
@@ -1284,6 +1285,7 @@ function mostrarApp(){
     document.getElementById('nav-usuarios').classList.remove('oculto');
     document.getElementById('nav-permisos').classList.remove('oculto');
     document.getElementById('nav-auditoria').classList.remove('oculto');
+    document.getElementById('nav-reporte').classList.remove('oculto');
   } else {
     Object.keys(TABLAS).forEach(vista=>{
       const t = TABLAS[vista];
@@ -1480,6 +1482,12 @@ async function cargarVista(vista){
     document.getElementById('titulo-vista').textContent = 'Rendimiento de asesores';
     document.getElementById('subtitulo-vista').textContent = 'Quién cierra más, quién convierte más, y quién se está quedando atrás.';
     return renderRendimientoAsesores();
+  }
+  if (vista === 'reporte_contable'){
+    if (!esAdmin) return mostrarSinAcceso('Reporte contable');
+    document.getElementById('titulo-vista').textContent = 'Reporte contable';
+    document.getElementById('subtitulo-vista').textContent = 'Ventas, comisiones y gastos del mes para el contador.';
+    return renderReporteContable();
   }
   if (vista === 'auditoria'){
     if (!esAdmin) return mostrarSinAcceso('Auditoría');
