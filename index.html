@@ -1365,9 +1365,11 @@ async function abrirFicha(uid){
   if (error || f?.error) return res.innerHTML = '<div class="vacio">No se pudo cargar la ficha.</div>';
   const c = f.cliente, compras = f.compras||[], pagos = f.pagos, af = f.afiliado, com = f.comisiones, casos = f.casos||[];
   const pagada = x => /pagad/i.test(x.estado||'');
+  const comprasProd = compras.filter(x=>x.tipo!=='experiencia');
+  const reservas = compras.filter(x=>x.tipo==='experiencia');
   const pend = compras.filter(x=>!pagada(x) && !/cancel|rechaz/i.test(x.estado||''));
   const sumaPor = arr => { const o={}; arr.forEach(x=>{const m=x.moneda||'USD'; o[m]=(o[m]||0)+Number(x.monto||0);}); return Object.keys(o).length ? Object.entries(o).map(([m,v])=>v.toFixed(2)+' '+m).join(' + ') : '0.00'; };
-  const enviosPend = compras.filter(x=>pagada(x) && x.tipo!=='evento' && /pendiente/i.test(x.envio_estado||''));
+  const enviosPend = compras.filter(x=>pagada(x) && x.tipo!=='experiencia' && /pendiente/i.test(x.envio_estado||''));
   const comPend = (com||[]).filter(x=>/pendiente/i.test(x.estado||''));
   const avisos = [];
   if (pend.length) avisos.push(`💳 Tiene ${pend.length} compra(s) sin pagar (${sumaPor(pend)})`);
@@ -1400,7 +1402,8 @@ async function abrirFicha(uid){
         <div>Programa: ${escapeHtml(af.programa||'—')}</div><div>Portal: ${chip(af.tiene_cuenta_portal?'Con cuenta':'Sin cuenta', af.tiene_cuenta_portal)}</div><div>Referido por: ${escapeHtml(af.referido_por||'—')}</div>
         <div>Referidos directos: ${af.referidos_directos||0}</div><div>Ventas referidas: ${fmn(af.ventas_referidas)}</div><div>Último pago recibido: ${fdt(af.ultimo_pago)}</div>
         <div>Cobra por: ${escapeHtml(af.metodo_pago_preferido||'—')}</div>${af.datos_pago?`<div>Cuenta: ${escapeHtml(af.datos_pago)}</div>`:''}</div>`) : ''}
-    ${secF('🛍️ Compras y envíos', tabF(['Fecha','Producto','Monto','Estado','Envío','Destino'], compras.map(x=>[fdt(x.fecha), escapeHtml(x.producto||'—')+(x.cantidad_personas>1?` (${x.cantidad_personas} pers.)`:'')+(x.codigo_referido?`<br><small>código ${escapeHtml(x.codigo_referido)}</small>`:''), fmn(x.monto,x.moneda), chip(x.estado, pagada(x)), (x.tipo==='evento'?'—':chip(x.envio_estado,/envi|entreg/i.test(x.envio_estado||'')&&!/pendiente/i.test(x.envio_estado||'')?true:null))+(x.guia?`<br><small>guía ${escapeHtml(x.guia)}</small>`:''), escapeHtml([x.oficina,x.destino,x.direccion].filter(Boolean).join(' · ')||'—')])))}
+    ${secF('🛍️ Compras y envíos', tabF(['Fecha','Producto','Monto','Estado','Envío','Destino'], comprasProd.map(x=>[fdt(x.fecha), escapeHtml(x.producto||'—')+(x.cantidad_personas>1?` (${x.cantidad_personas} pers.)`:'')+(x.codigo_referido?`<br><small>código ${escapeHtml(x.codigo_referido)}</small>`:''), fmn(x.monto,x.moneda), chip(x.estado, pagada(x)), (x.tipo==='experiencia'?'—':chip(x.envio_estado,/envi|entreg/i.test(x.envio_estado||'')&&!/pendiente/i.test(x.envio_estado||'')?true:null))+(x.guia?`<br><small>guía ${escapeHtml(x.guia)}</small>`:''), escapeHtml([x.oficina,x.destino,x.direccion].filter(Boolean).join(' · ')||'—')])))}
+    ${reservas.length ? secF('🎫 Reservas de eventos', tabF(['Fecha','Evento','Personas','Pagó','Saldo','Paso'], reservas.map(x=>{ const venc = /cancel|venc/i.test(x.estado||''); const tot = x.monto_total_evento ?? x.monto; const saldo = Math.max(Number(tot||0)-Number(x.monto||0),0); const paso = pagada(x) ? 'Pagado' : venc ? 'Cancelada (venció)' : 'Reservado, falta pagar'; return [fdt(x.fecha), escapeHtml(x.producto||'—'), x.cantidad_personas||1, pagada(x)?fmn(x.monto,x.moneda):'—', pagada(x)?fmn(saldo,x.moneda):'—', chip(paso, pagada(x)?true:(venc?false:null))]; }))) : ''}
     ${pagos ? secF('💳 Pagos', tabF(['Fecha','Método','Referencia','Monto','Estado'], pagos.map(x=>[fdt(x.fecha), escapeHtml(x.metodo||'—'), escapeHtml(x.referencia||'—'), fmn(x.monto), chip(x.estado, /verific|aprob/i.test(x.estado||'')?true:null)]))) : ''}
     ${com ? secF('💰 Comisiones que ha ganado', tabF(['Fecha','Por compra de','Nivel','Venta','Comisión','Estado'], com.map(x=>[fdt(x.fecha), escapeHtml(x.comprador||'—'), 'N'+x.nivel, fmn(x.monto_venta), fmn(x.monto), chip(x.estado, /pagad/i.test(x.estado||'')?true:null)]))) : ''}
     ${casos.length ? secF('🙋 Atención al cliente', tabF(['Fecha','Motivo','Estado','Vendió'], casos.map(x=>[fdt(x.fecha), escapeHtml(x.motivo||'—'), chip(x.estado), x.convertido?'Sí':'No']))) : ''}
