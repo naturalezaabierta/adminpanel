@@ -584,6 +584,7 @@
       </div>
     </div>
     <nav id="nav-principal">
+      <button class="enlace oculto" id="nav-mis-eventos" data-vista="mis_eventos">🎫 Mis eventos</button>
       <button class="enlace" data-vista="dashboard">📊 Dashboard</button>
       <div class="separador">Ventas y clientes</div>
       <button class="enlace" data-vista="ficha_cliente">🔎 Ficha de cliente</button>
@@ -828,6 +829,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let usuarioActual = null;
 let esAdmin = false;
+let esAnfitrion = false;
 let misPermisos = {};
 let vistaActual = 'clientes';
 let filasCache = [];
@@ -1250,6 +1252,8 @@ async function iniciarSesionSiCorresponde(){
     (permisos||[]).forEach(p=>{ misPermisos[p.area] = p.nivel; });
   }
 
+  esAnfitrion = false;
+  if (!esAdmin){ const { data: h } = await sb.rpc('fn_es_anfitrion'); esAnfitrion = (h === true); }
   mostrarApp();
 }
 
@@ -1267,6 +1271,13 @@ function mostrarApp(){
   document.getElementById('pie-nombre').textContent = nombreMostrado;
   document.getElementById('pie-avatar').textContent = (nombreMostrado.charAt(0) || 'U').toUpperCase();
   document.getElementById('pie-rol').textContent = esAdmin ? 'Admin' : 'Usuario';
+  
+  if (esAnfitrion){
+    document.getElementById('pie-rol').textContent = 'Anfitrión';
+    document.querySelectorAll('#nav-principal .enlace, #nav-principal .separador').forEach(el=>el.classList.add('oculto'));
+    document.getElementById('nav-mis-eventos').classList.remove('oculto');
+    return cargarVista('mis_eventos');
+  }
 
   if (esAdmin){
     document.getElementById('sep-admin').classList.remove('oculto');
@@ -1415,6 +1426,13 @@ async function cargarVista(vista){
   vistaActual = vista;
   marcarNavActiva(vista);
   document.getElementById('acciones-vista').innerHTML = '';
+    
+  if (vista === 'mis_eventos'){
+    if (!esAnfitrion && !esAdmin) return mostrarSinAcceso('Mis eventos');
+    document.getElementById('titulo-vista').textContent = 'Mis eventos';
+    document.getElementById('subtitulo-vista').textContent = 'Los eventos que tienes asignados y quién va a asistir.';
+    return renderMisEventos();
+  }
   if (vista === 'pagosmasivos'){
     if (!esAdmin && misPermisos['pagos_referidos'] !== 'editar') return mostrarSinAcceso('Pagos masivos');
     document.getElementById('titulo-vista').textContent = 'Pagos masivos';
@@ -1557,6 +1575,7 @@ function renderTabla(vista, filas){
     }
     if (vista === 'eventos_experiencias'){
       botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__verAsistentes('${fila[t.pk]}')">Asistentes</button>`;
+    if (esAdmin) botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__anfitriones('${fila[t.pk]}')">Anfitriones</button>`;
     }
     if (vista === 'usuarios_panel' || vista === 'asesores'){
       const estaActivo = fila.activo !== false;
@@ -1711,22 +1730,61 @@ window.__verAsistentes = async (eventoId)=>{
   cont.innerHTML = '<div class="cargando">Cargando asistentes…</div>';
   const { data, error } = await sb.rpc('fn_lista_asistentes_evento', { p_evento_id: eventoId });
   if (error || data?.error){ cont.innerHTML = '<div class="vacio">No se pudo cargar la lista.</div>'; return; }
-  const ev = data.evento, lista = data.asistentes || [];
+  const ev = data.evento, lista = data.asistentes || [], completa = data.vista === 'completa';
   document.getElementById('titulo-vista').textContent = 'Asistentes · ' + (ev.nombre||eventoId);
   document.getElementById('subtitulo-vista').textContent = `${lista.length} reserva(s) pagada(s) · ${data.total_personas} persona(s)` + (ev.fecha ? ' · ' + ev.fecha : '');
   const m = (n,mo)=> n==null ? '—' : Number(n).toFixed(2)+' '+(mo||'USD');
   const nom = a => ((a.nombre||'')+' '+(a.apellido||'')).trim();
+  const volverA = esAnfitrion ? 'mis_eventos' : 'eventos_experiencias';
+  const cols = completa ? 6 : 3;
   cont.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <button id="asist-volver" class="secundario">← Volver a eventos</button>
+      <button id="asist-volver" class="secundario">← Volver</button>
       <button id="asist-copiar" class="secundario">Copiar lista</button></div>
-    <div class="panel-tabla"><div style="overflow-x:auto"><table class="datos"><thead><tr><th>Nombre y apellido</th><th>Cédula</th><th>Teléfono</th><th>Personas</th><th>Pagó</th><th>Saldo (efectivo)</th></tr></thead><tbody>${
-      lista.map(a=>`<tr><td>${escapeHtml(nom(a)||'—')}</td><td>${escapeHtml(a.cedula||'—')}</td><td>${escapeHtml(a.telefono||'—')}</td><td>${a.personas}</td><td>${m(a.pagado,a.moneda)}</td><td>${m(a.saldo,a.moneda)}</td></tr>`).join('') || '<tr><td colspan="6"><div class="vacio">Todavía no hay reservas pagadas.</div></td></tr>'
+    <div class="panel-tabla"><div style="overflow-x:auto"><table class="datos"><thead><tr><th>Nombre y apellido</th>${completa?'<th>Cédula</th><th>Teléfono</th>':''}<th>Personas</th>${completa?'<th>Pagó</th>':''}<th>Saldo (efectivo)</th></tr></thead><tbody>${
+      lista.map(a=>`<tr><td>${escapeHtml(nom(a)||'—')}</td>${completa?`<td>${escapeHtml(a.cedula||'—')}</td><td>${escapeHtml(a.telefono||'—')}</td>`:''}<td>${a.personas}</td>${completa?`<td>${m(a.pagado,a.moneda)}</td>`:''}<td>${m(a.saldo,a.moneda)}</td></tr>`).join('') || `<tr><td colspan="${cols}"><div class="vacio">Todavía no hay reservas pagadas.</div></td></tr>`
     }</tbody></table></div></div>`;
-  document.getElementById('asist-volver').onclick = ()=> cargarVista('eventos_experiencias');
+  document.getElementById('asist-volver').onclick = ()=> cargarVista(volverA);
   document.getElementById('asist-copiar').onclick = ()=>{
-    const t = lista.map((a,i)=>`${i+1}. ${nom(a)} · ${a.cedula||''} · ${a.telefono||''} · ${a.personas} pers. · saldo ${Number(a.saldo||0).toFixed(2)}`).join('\n');
+    const t = lista.map((a,i)=>`${i+1}. ${nom(a)}${completa?' · '+(a.cedula||'')+' · '+(a.telefono||''):''} · ${a.personas} pers. · saldo ${Number(a.saldo||0).toFixed(2)}`).join('\n');
     navigator.clipboard.writeText(t).then(()=>alert('Lista copiada.'));
   };
+};
+
+async function renderMisEventos(){
+  const cont = document.getElementById('contenido-vista');
+  cont.innerHTML = '<div class="cargando">Cargando tus eventos…</div>';
+  const { data, error } = await sb.rpc('fn_mis_eventos_anfitrion');
+  if (error){ cont.innerHTML = '<div class="vacio">No se pudieron cargar tus eventos.</div>'; return; }
+  const lista = data || [];
+  if (!lista.length){ cont.innerHTML = '<div class="vacio">Todavía no tienes eventos asignados.</div>'; return; }
+  cont.innerHTML = lista.map(e=>`<div class="grupo-afiliado"><div class="cuerpo" style="padding-top:16px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
+    <div><div style="font-size:15px;font-weight:700;color:var(--verde-950);">${escapeHtml(e.nombre||'')}</div>
+    <div style="font-size:12.5px;color:var(--tinta-suave);">${escapeHtml(e.ciudad_estado||'')} · ${e.fecha ? new Date(e.fecha).toLocaleDateString('es-VE') : 'Sin fecha'}${e.hora ? ' · '+escapeHtml(e.hora) : ''}</div>
+    <div style="font-size:12.5px;margin-top:2px;">${e.personas_pagadas} persona(s) con reserva pagada</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">${e.enlace_grupo_whatsapp ? `<a href="${escapeHtml(e.enlace_grupo_whatsapp)}" target="_blank"><button type="button" class="secundario">💬 Grupo de WhatsApp</button></a>` : ''}
+    <button type="button" onclick="window.__verAsistentes('${e.id}')">Ver asistentes</button></div></div></div>`).join('');
+}
+
+window.__anfitriones = async (eventoId)=>{
+  const cont = document.getElementById('contenido-vista');
+  cont.innerHTML = '<div class="cargando">Cargando…</div>';
+  const { data, error } = await sb.rpc('fn_anfitriones_evento', { p_evento_id: eventoId });
+  if (error || data?.error){ cont.innerHTML = '<div class="vacio">No se pudo cargar.</div>'; return; }
+  const ev = filasCache.find(f=>String(f.id)===String(eventoId));
+  document.getElementById('titulo-vista').textContent = 'Anfitriones · ' + (ev?.nombre || eventoId);
+  document.getElementById('subtitulo-vista').textContent = 'Quién puede ver la lista de asistentes de este evento.';
+  const lista = data.anfitriones || [];
+  cont.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button id="anf-volver" class="secundario">← Volver a eventos</button></div>
+    <div class="panel-tabla" style="margin-bottom:14px;"><div class="barra"><input id="anf-email" type="email" placeholder="Correo del anfitrión (ya creado en Usuarios del panel)" style="flex:1;min-width:220px;"><button id="anf-agregar">Asignar</button></div></div>
+    ${lista.length ? lista.map(a=>`<div class="grupo-afiliado"><div class="cab" style="cursor:default;"><div><strong>${escapeHtml(a.nombre||'')}</strong><div style="font-size:12px;color:var(--tinta-suave);">${escapeHtml(a.email||'')}</div></div><button class="secundario" data-quitar="${escapeHtml(a.email||'')}" style="color:var(--rojo-600);">Quitar</button></div></div>`).join('') : '<div class="vacio">Este evento aún no tiene anfitriones.</div>'}`;
+  document.getElementById('anf-volver').onclick = ()=> cargarVista('eventos_experiencias');
+  const cambiar = async (email, asignar)=>{
+    const { data:r, error:e } = await sb.rpc('fn_asignar_anfitrion', { p_evento_id: eventoId, p_email: email, p_asignar: asignar });
+    if (e || r?.error){ alert(r?.error==='no_existe_usuario' ? 'Ese correo no está en Usuarios del panel. Créalo primero con el rol Anfitrión.' : 'No se pudo guardar.'); return; }
+    window.__anfitriones(eventoId);
+  };
+  document.getElementById('anf-agregar').onclick = ()=>{ const v = document.getElementById('anf-email').value.trim(); if (v) cambiar(v, true); };
+  cont.querySelectorAll('[data-quitar]').forEach(b=> b.onclick = ()=> cambiar(b.dataset.quitar, false));
 };
   
 let modalContexto = { vista:null, fila:null };
@@ -2460,6 +2518,9 @@ const ROLES_PANEL = [
       // le crea la cuenta -- de ahí en adelante inicia sesión por el CRM, no por acá.
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
       {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'editar'} ] },
+  { valor:'anfitrion', etiqueta:'Anfitrión (solo ve sus eventos)', rolDb:'lectura', permisos:[
+      {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
   { valor:'lectura', etiqueta:'Solo lectura general', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'lectura'},{area:'pagos_referidos',nivel:'lectura'},
       {area:'creativos',nivel:'lectura'},{area:'catalogo',nivel:'lectura'},{area:'atencion_publico',nivel:'lectura'} ] },
