@@ -590,6 +590,7 @@
       <button class="enlace" data-vista="envios">📦 Envíos del día</button>
       <button class="enlace" data-vista="clientes">👥 Clientes</button>
       <button class="enlace" data-vista="compras">🛍️ Compras</button>
+      <button class="enlace" data-vista="reservas">🎫 Reservas de eventos</button>
       <button class="enlace" data-vista="empresas_envio">📦 Empresas de envío</button>
       <button class="enlace" data-vista="pagos">💳 Pagos</button>
       <button class="enlace" data-vista="metodos_pago">🏦 Métodos de pago</button>
@@ -870,7 +871,7 @@ const TABLAS = {
     ]
   },
   compras: {
-    etiqueta: 'Compras', pk:'compra_id', autoPk:false, area:'pedidos_envios',
+    etiqueta: 'Compras de productos', filtro:{tipo_item:'producto'}, pk:'compra_id', autoPk:false, area:'pedidos_envios',
     columnas: [
       {clave:'compra_id', etiqueta:'ID compra', tipo:'text', listado:true},
       {clave:'usuario_id', etiqueta:'Cliente (usuario_id)', tipo:'text', listado:true},
@@ -890,6 +891,23 @@ const TABLAS = {
       {clave:'estado_envio', etiqueta:'Estado de envío', tipo:'select', opciones:['Pendiente','En preparación','Enviado','Entregado','No Aplica'], listado:true},
       {clave:'numero_guia', etiqueta:'Número de guía', tipo:'text', listado:true},
       {clave:'fecha_envio', etiqueta:'Fecha de envío', tipo:'date'},
+      {clave:'fecha_compra', etiqueta:'Fecha', tipo:'readonly', listado:true},
+    ]
+  },
+  reservas: {
+    etiqueta: 'Reservas de eventos', tabla:'compras', filtro:{tipo_item:'experiencia'}, pk:'compra_id', autoPk:false, area:'pedidos_envios',
+    columnas: [
+      {clave:'compra_id', etiqueta:'ID reserva', tipo:'text', listado:true},
+      {clave:'usuario_id', etiqueta:'Cliente (usuario_id)', tipo:'text', listado:true},
+      {clave:'producto_id', etiqueta:'ID evento', tipo:'text', listado:true},
+      {clave:'cantidad_personas', etiqueta:'Personas', tipo:'number', listado:true},
+      {clave:'monto', etiqueta:'Pagado / abonado', tipo:'number', listado:true},
+      {clave:'monto_total_evento', etiqueta:'Precio total', tipo:'number', listado:true},
+      {clave:'moneda', etiqueta:'Moneda', tipo:'text'},
+      {clave:'estado_compra', etiqueta:'Estado', tipo:'text', listado:true},
+      {clave:'metodo_pago_elegido', etiqueta:'Método de pago', tipo:'text', listado:true},
+      {clave:'referencia_pago', etiqueta:'Referencia', tipo:'text'},
+      {clave:'codigo_referido_usado', etiqueta:'Código de referido usado', tipo:'text'},
       {clave:'fecha_compra', etiqueta:'Fecha', tipo:'readonly', listado:true},
     ]
   },
@@ -1461,7 +1479,8 @@ async function cargarVista(vista){
     document.getElementById('acciones-vista').appendChild(btnNuevo);
   }
 
-  let query = sb.from(vista).select('*').limit(500);
+  let query = sb.from(TABLAS[vista].tabla || vista).select('*').limit(500);
+  if (TABLAS[vista].filtro) Object.entries(TABLAS[vista].filtro).forEach(([k,v])=>{ query = query.eq(k,v); });
   const { data, error } = await query;
   if (error){
     document.getElementById('contenido-vista').innerHTML = `<div class="vacio">No se pudieron cargar los datos: ${error.message}</div>`;
