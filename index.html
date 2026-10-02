@@ -1703,6 +1703,29 @@ window.__clonarFila = (vista, pkValor)=>{
 /* =========================================================
    MODAL GENÉRICO CREAR / EDITAR
    ========================================================= */
+window.__verAsistentes = async (eventoId)=>{
+  const cont = document.getElementById('contenido-vista');
+  cont.innerHTML = '<div class="cargando">Cargando asistentes…</div>';
+  const { data, error } = await sb.rpc('fn_lista_asistentes_evento', { p_evento_id: eventoId });
+  if (error || data?.error){ cont.innerHTML = '<div class="vacio">No se pudo cargar la lista.</div>'; return; }
+  const ev = data.evento, lista = data.asistentes || [];
+  document.getElementById('titulo-vista').textContent = 'Asistentes · ' + (ev.nombre||eventoId);
+  document.getElementById('subtitulo-vista').textContent = `${lista.length} reserva(s) pagada(s) · ${data.total_personas} persona(s)` + (ev.fecha ? ' · ' + ev.fecha : '');
+  const m = (n,mo)=> n==null ? '—' : Number(n).toFixed(2)+' '+(mo||'USD');
+  const nom = a => ((a.nombre||'')+' '+(a.apellido||'')).trim();
+  cont.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <button id="asist-volver" class="secundario">← Volver a eventos</button>
+      <button id="asist-copiar" class="secundario">Copiar lista</button></div>
+    <div class="panel-tabla"><div style="overflow-x:auto"><table class="datos"><thead><tr><th>Nombre y apellido</th><th>Cédula</th><th>Teléfono</th><th>Personas</th><th>Pagó</th><th>Saldo (efectivo)</th></tr></thead><tbody>${
+      lista.map(a=>`<tr><td>${escapeHtml(nom(a)||'—')}</td><td>${escapeHtml(a.cedula||'—')}</td><td>${escapeHtml(a.telefono||'—')}</td><td>${a.personas}</td><td>${m(a.pagado,a.moneda)}</td><td>${m(a.saldo,a.moneda)}</td></tr>`).join('') || '<tr><td colspan="6"><div class="vacio">Todavía no hay reservas pagadas.</div></td></tr>'
+    }</tbody></table></div></div>`;
+  document.getElementById('asist-volver').onclick = ()=> cargarVista('eventos_experiencias');
+  document.getElementById('asist-copiar').onclick = ()=>{
+    const t = lista.map((a,i)=>`${i+1}. ${nom(a)} · ${a.cedula||''} · ${a.telefono||''} · ${a.personas} pers. · saldo ${Number(a.saldo||0).toFixed(2)}`).join('\n');
+    navigator.clipboard.writeText(t).then(()=>alert('Lista copiada.'));
+  };
+};
+  
 let modalContexto = { vista:null, fila:null };
 
 function abrirModal(vista, fila, plantilla){
