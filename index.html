@@ -3010,7 +3010,7 @@ async function renderReporteContable(){
   if (err){ cont.innerHTML = `<div class="vacio">No se pudo armar el reporte: ${txt(err.message)}</div>`; return; }
 
   const compras = rc.data||[], comis = rm.data||[], gastos = rg.data||[];
-  const pagada = x => /pagad/i.test(x.estado_compra||'');
+  const pagada = x => /pagad|completad/i.test(x.estado_compra||'');
   const esUsd = x => !x.moneda || /usd/i.test(x.moneda);
   const ventas = compras.filter(pagada);
   const ventasUsd = ventas.filter(esUsd);
