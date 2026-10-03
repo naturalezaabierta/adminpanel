@@ -1377,7 +1377,7 @@ async function abrirFicha(uid){
   const { data: f, error } = await sb.rpc('fn_ficha_cliente_admin', { p_usuario_id: uid });
   if (error || f?.error) return res.innerHTML = '<div class="vacio">No se pudo cargar la ficha.</div>';
   const c = f.cliente, compras = f.compras||[], pagos = f.pagos, af = f.afiliado, com = f.comisiones, casos = f.casos||[];
-  const pagada = x => /pagad/i.test(x.estado||'');
+  const pagada = x => /pagad|completad/i.test(x.estado||'');
   const comprasProd = compras.filter(x=>x.tipo!=='experiencia');
   const reservas = compras.filter(x=>x.tipo==='experiencia');
   const pend = compras.filter(x=>!pagada(x) && !/cancel|rechaz/i.test(x.estado||''));
@@ -2902,11 +2902,13 @@ async function renderDashboard(){
     return;
   }
 
-  const [ { data: compras }, { data: comisiones }, { data: afiliados }, { data: clientes } ] = await Promise.all([
-    sb.from('compras').select('monto, tipo_item, estado_compra, fecha_compra').order('fecha_compra', { ascending:true }),
-    sb.from('comisiones').select('monto_comision, estado_comision, fecha_generada'),
+  const desde12 = ultimosNMeses(12)[0].clave + '-01T00:00:00';
+  const [ { data: compras }, { data: comisiones }, { data: afiliados }, { data: clientes }, { count: totalClientes } ] = await Promise.all([
+    sb.from('compras').select('monto, tipo_item, estado_compra, fecha_compra').in('estado_compra', ['Pagado','Completada']).gte('fecha_compra', desde12).order('fecha_compra', { ascending:true }).limit(5000),
+    sb.from('comisiones').select('monto_comision, estado_comision, fecha_generada').gte('fecha_generada', desde12).not('estado_comision','ilike','%cancel%').limit(5000),
     sb.from('afiliados').select('afiliado_id, ventas_referidas_totales').order('ventas_referidas_totales', { ascending:false }).limit(6),
-    sb.from('clientes').select('fecha_registro'),
+    sb.from('clientes').select('fecha_registro').gte('fecha_registro', desde12).limit(5000),
+    sb.from('clientes').select('*', { count:'exact', head:true }),
   ]);
 
   const meses = ultimosNMeses(12);
