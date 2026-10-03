@@ -2946,7 +2946,7 @@ async function renderDashboard(){
       <div class="tarjeta destacada"><div class="num">$${totalVentas.toFixed(2)}</div><div class="etq">Ventas totales registradas</div></div>
       <div class="tarjeta destacada"><div class="num">${(compras||[]).length}</div><div class="etq">Compras totales</div></div>
       <div class="tarjeta destacada"><div class="num">$${totalComisiones.toFixed(2)}</div><div class="etq">Comisiones generadas</div></div>
-      <div class="tarjeta destacada"><div class="num">${(clientes||[]).length}</div><div class="etq">Clientes registrados</div></div>
+      <div class="tarjeta destacada"><div class="num">${totalClientes ?? (clientes||[]).length}</div><div class="etq">Clientes registrados</div></div>
     </div>
     <div class="rejilla-dashboard">
       <div class="tarjeta-grafico ancho"><h4>Evolución de ventas (últimos 12 meses)</h4><canvas id="g-ventas-mes"></canvas></div>
