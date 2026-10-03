@@ -1510,6 +1510,8 @@ async function cargarVista(vista){
 
   let query = sb.from(TABLAS[vista].tabla || vista).select('*').limit(500);
   if (TABLAS[vista].filtro) Object.entries(TABLAS[vista].filtro).forEach(([k,v])=>{ query = query.eq(k,v); });
+  const ORDEN_RECIENTES = { compras:'fecha_compra', reservas:'fecha_compra', pagos:'fecha_pago', comisiones:'fecha_generada', ventas_distribuidor:'fecha_venta' };
+  if (ORDEN_RECIENTES[vista]) query = query.order(ORDEN_RECIENTES[vista], { ascending:false });
   const { data, error } = await query;
   if (error){
     document.getElementById('contenido-vista').innerHTML = `<div class="vacio">No se pudieron cargar los datos: ${error.message}</div>`;
@@ -1643,10 +1645,12 @@ function renderTabla(vista, filas){
     pintarPagina();
   });
 
+  const indiceBusqueda = filas.map(f => JSON.stringify(f).toLowerCase());
+  let temporizadorBusqueda;
   document.getElementById('buscador-tabla').addEventListener('input', (e)=>{
+    clearTimeout(temporizadorBusqueda);
     const q = e.target.value.toLowerCase();
-    const filtradas = filas.filter(f => JSON.stringify(f).toLowerCase().includes(q));
-    pintar(filtradas);
+    temporizadorBusqueda = setTimeout(()=> pintar(filas.filter((f,i)=> indiceBusqueda[i].includes(q))), 150);
   });
 }
 
