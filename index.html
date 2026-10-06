@@ -887,6 +887,7 @@ const TABLAS = {
       {clave:'afiliado_n1_id', etiqueta:'Afiliado nivel 1', tipo:'text'},
       {clave:'afiliado_n2_id', etiqueta:'Afiliado nivel 2', tipo:'text'},
       {clave:'afiliado_n3_id', etiqueta:'Afiliado nivel 3', tipo:'text'},
+      {clave:'afiliado_n4_id', etiqueta:'Afiliado nivel 4', tipo:'text'},
       {clave:'estado_compra', etiqueta:'Estado', tipo:'text', listado:true},
       {clave:'telefono_envio', etiqueta:'Teléfono de envío', tipo:'text'},
       {clave:'oficina_envio', etiqueta:'Oficina de envío', tipo:'text'},
@@ -980,6 +981,7 @@ const TABLAS = {
       {clave:'comision_n1', etiqueta:'Comisión N1 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
       {clave:'comision_n2', etiqueta:'Comisión N2 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
       {clave:'comision_n3', etiqueta:'Comisión N3 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
+      {clave:'comision_n4', etiqueta:'Comisión N4 (fracción: 0.02 = 2%, NO escribas 2)', tipo:'number'},
       {clave:'imagen_url', etiqueta:'URL imagen', tipo:'text'},
       {clave:'video_url', etiqueta:'URL video', tipo:'text'},
     ]
@@ -1012,6 +1014,7 @@ const TABLAS = {
       {clave:'comision_n1', etiqueta:'Comisión N1 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
       {clave:'comision_n2', etiqueta:'Comisión N2 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
       {clave:'comision_n3', etiqueta:'Comisión N3 (fracción: 0.25 = 25%, NO escribas 25)', tipo:'number'},
+      {clave:'comision_n4', etiqueta:'Comisión N4 (fracción: 0.02 = 2%, NO escribas 2)', tipo:'number'},
       {clave:'imagen_url', etiqueta:'URL imagen', tipo:'text'},
       {clave:'video_url', etiqueta:'URL video', tipo:'text'},
     ]
@@ -1861,7 +1864,7 @@ document.getElementById('form-modal').addEventListener('submit', async (e)=>{
   const errBox = document.getElementById('modal-error');
   errBox.classList.add('oculto');
 
-  const camposComision = ['comision_n1','comision_n2','comision_n3'];
+  const camposComision = ['comision_n1','comision_n2','comision_n3','comision_n4'];
   for (const c of camposComision){
     if (datos[c] != null && Number(datos[c]) > 1){
       errBox.textContent = `"${c}" debe ser una fracción entre 0 y 1 (ej: 0.25 para 25%). Escribiste ${datos[c]}, que pagaría ${datos[c]*100}% de comisión.`;
@@ -1869,6 +1872,11 @@ document.getElementById('form-modal').addEventListener('submit', async (e)=>{
       return;
     }
   }
+
+  // Aviso si la suma N1..N4 pasa del 35% total acordado (no bloquea, solo confirma)
+  const sumaComisiones = camposComision.reduce((acc,c)=> acc + Number(datos[c]||0), 0);
+  if (sumaComisiones > 0.35 + 1e-9 &&
+      !confirm(`La suma de comisiones N1+N2+N3+N4 es ${(sumaComisiones*100).toFixed(2)}%, mayor al 35% acordado. ¿Guardar de todas formas?`)) return;
 
   let resultado;
   if (t.filtro) Object.assign(datos, t.filtro);
