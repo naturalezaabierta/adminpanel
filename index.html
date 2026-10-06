@@ -1830,7 +1830,7 @@ function abrirModal(vista, fila, plantilla){
       const tipoHtml = c.tipo === 'number' ? 'number' : (c.tipo === 'date' ? 'datetime-local' : 'text');
       let val = valorActual;
       if (c.tipo === 'date' && val) val = new Date(val).toISOString().slice(0,16);
-      input = `<input type="${tipoHtml}" data-campo="${c.clave}" value="${escapeHtml(String(val))}" ${soloLectura?'disabled':''}>`;
+      input = `<input type="${tipoHtml}" ${c.tipo==='number' ? 'step="any"' : ''} data-campo="${c.clave}" value="${escapeHtml(String(val))}" ${soloLectura?'disabled':''}>`;
     }
     div.innerHTML = `<label>${c.etiqueta}</label>${input}`;
     campos.appendChild(div);
