@@ -882,6 +882,7 @@ const TABLAS = {
       {clave:'tipo_item', etiqueta:'Tipo', tipo:'select', opciones:['producto','experiencia'], listado:true},
       {clave:'monto', etiqueta:'Monto (cobrado hoy)', tipo:'number', listado:true},
       {clave:'monto_total_evento', etiqueta:'Precio total evento (solo reservas c/anticipo)', tipo:'number', listado:true},
+      {clave:'stock_disponible', etiqueta:'Stock disponible (vacío = sin límite)', tipo:'number', listado:true},
       {clave:'moneda', etiqueta:'Moneda', tipo:'text'},
       {clave:'codigo_referido_usado', etiqueta:'Código de referido usado', tipo:'text'},
       {clave:'afiliado_n1_id', etiqueta:'Afiliado nivel 1', tipo:'text'},
@@ -1870,6 +1871,12 @@ document.getElementById('form-modal').addEventListener('submit', async (e)=>{
       errBox.textContent = `"${c}" debe ser una fracción entre 0 y 1 (ej: 0.25 para 25%). Escribiste ${datos[c]}, que pagaría ${datos[c]*100}% de comisión.`;
       errBox.classList.remove('oculto');
       return;
+    }
+    if (vista === 'productos_servicios' && datos.stock_disponible != null &&
+        (!Number.isInteger(datos.stock_disponible) || datos.stock_disponible < 0)){
+      errBox.textContent = 'El stock debe ser un número entero de 0 en adelante (déjalo vacío si no quieres controlar unidades).';
+      errBox.classList.remove('oculto');
+     return;
     }
   }
 
