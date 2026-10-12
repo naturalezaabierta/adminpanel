@@ -864,6 +864,7 @@ const TABLAS = {
     columnas: [
       {clave:'afiliado_id', etiqueta:'ID afiliado', tipo:'text', listado:true},
       {clave:'usuario_id', etiqueta:'ID de cliente vinculado', tipo:'text', listado:true},
+      {clave:'correo_cliente', etiqueta:'Correo del cliente', tipo:'readonly', listado:true},
       {clave:'codigo_propio', etiqueta:'Código de referido', tipo:'text', listado:true},
       {clave:'referido_por_usuario_id', etiqueta:'Referido por (usuario_id)', tipo:'text'},
       {clave:'programa', etiqueta:'Programa', tipo:'text', listado:true},
@@ -1523,6 +1524,14 @@ async function cargarVista(vista){
     return;
   }
   filasCache = data || [];
+  if (vista === 'afiliados'){
+    const ids = [...new Set(filasCache.map(a=>a.usuario_id).filter(Boolean))];
+    if (ids.length){
+      const { data: cli } = await sb.from('clientes').select('usuario_id, correo').in('usuario_id', ids);
+      const mapaCorreo = Object.fromEntries((cli||[]).map(c=>[c.usuario_id, c.correo]));
+      filasCache.forEach(a=>{ a.correo_cliente = mapaCorreo[a.usuario_id] || null; });
+    }
+  }
 
   if (vista === 'usuarios_panel'){
     const { data: permisos } = await sb.from('permisos_area').select('*');
