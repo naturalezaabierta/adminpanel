@@ -3159,5 +3159,38 @@ sb.auth.onAuthStateChange((evento)=>{
   }
 });
 </script>
+<style>
+.ojito-wrap{position:relative;display:block;width:100%}
+.ojito-wrap>input{padding-right:44px!important}
+.ojito-btn{position:absolute!important;right:6px;top:50%;transform:translateY(-50%);width:34px!important;height:34px;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;cursor:pointer;font-size:17px;line-height:1;opacity:.65}
+.ojito-btn:hover{opacity:1}
+</style>
+<script>
+(function(){
+  function poner(inp){
+    if(inp.dataset.ojito) return;
+    inp.dataset.ojito='1';
+    var w=document.createElement('span');
+    w.className='ojito-wrap';
+    inp.parentNode.insertBefore(w,inp);
+    w.appendChild(inp);
+    var b=document.createElement('button');
+    b.type='button';
+    b.className='ojito-btn';
+    b.textContent='👁';
+    b.setAttribute('aria-label','Mostrar contraseña');
+    b.onclick=function(){
+      var ver=inp.type==='password';
+      inp.type=ver?'text':'password';
+      b.textContent=ver?'🙈':'👁';
+      b.setAttribute('aria-label',ver?'Ocultar contraseña':'Mostrar contraseña');
+    };
+    w.appendChild(b);
+  }
+  function buscar(){document.querySelectorAll('input[type=password]').forEach(poner);}
+  buscar();
+  new MutationObserver(buscar).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
 </body>
 </html>
