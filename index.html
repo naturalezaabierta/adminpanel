@@ -549,6 +549,40 @@
     .rejilla-dashboard .tarjeta-grafico{padding:14px}
   }
 /* ===== MOVIL-APP: fin ===== */
+
+/* ===== MOVIL-TARJETAS: inicio ===== */
+@media(max-width:700px){
+  .panel-tabla{background:transparent;border:none;box-shadow:none;overflow:visible}
+  .panel-tabla .barra{background:#fff;border:1px solid var(--borde);border-radius:var(--radio);margin-bottom:12px}
+
+  table.datos,table.datos tbody{display:block;width:100%}
+  table.datos thead{display:none}
+  table.datos tr{display:block;background:#fff;border:1px solid var(--borde);border-radius:var(--radio);
+    box-shadow:var(--sombra-sm);margin-bottom:12px;padding:6px 14px}
+  table.datos tbody tr:hover{background:#fff}
+
+  table.datos td{display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+    max-width:none;overflow:visible;white-space:normal!important;text-align:right;
+    word-break:break-word;padding:9px 0;border-bottom:1px solid var(--borde-suave)}
+  table.datos td:last-child{border-bottom:none}
+  table.datos td:first-child{font-weight:700;color:var(--tinta-fuerte)}
+  table.datos td::before{content:attr(data-label);flex:0 0 38%;max-width:42%;text-align:left;
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--tinta-suave);font-weight:700}
+
+  /* celdas sin título y fila "No hay registros" */
+  table.datos td[data-label=""]::before{display:none}
+  table.datos td[colspan]{display:block;text-align:center}
+  table.datos td[colspan]::before{display:none}
+
+  /* celda de botones */
+  table.datos td[data-label="Acciones"]{flex-wrap:wrap;justify-content:flex-start;gap:8px;padding-top:12px}
+  table.datos td[data-label="Acciones"]::before{display:none}
+  table.datos td button{padding:9px 14px!important;font-size:13px!important}
+
+  #paginador-tabla{padding:8px 0!important}
+}
+/* ===== MOVIL-TARJETAS: fin ===== */
 </style>
 </head>
 <body>
@@ -3258,6 +3292,24 @@ sb.auth.onAuthStateChange((evento)=>{
   document.getElementById('nav-principal').addEventListener('click',cerrar);
   const t=document.getElementById('titulo-vista'),m=document.getElementById('titulo-movil');
   new MutationObserver(()=>{m.textContent=t.textContent}).observe(t,{childList:true,characterData:true,subtree:true});
+})();
+</script>
+<script>
+/* MOVIL-TARJETAS */
+(function(){
+  function etiquetar(tabla){
+    const ths=[...tabla.querySelectorAll('thead th')].map(th=>th.textContent.trim());
+    tabla.querySelectorAll('tbody tr').forEach(tr=>{
+      [...tr.children].forEach((td,i)=>{
+        if(td.tagName==='TD' && !td.hasAttribute('data-label')){
+          td.setAttribute('data-label', td.colSpan>1 ? '' : (ths[i]||''));
+        }
+      });
+    });
+  }
+  function pasar(){ document.querySelectorAll('table.datos').forEach(etiquetar); }
+  new MutationObserver(pasar).observe(document.getElementById('contenido-vista'),{childList:true,subtree:true});
+  pasar();
 })();
 </script>
 </body>
