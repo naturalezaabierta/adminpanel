@@ -1689,6 +1689,9 @@ function renderTabla(vista, filas){
     if (vista === 'asesores'){
       botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__abrirFichaRRHH('${fila[t.pk]}')">Ficha RRHH</button>`;
     }
+    if (esAdmin && (vista === 'afiliados' || vista === 'usuarios_panel' || vista === 'asesores')){
+      botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__claveTemporal('${vista}','${fila[t.pk]}')">🔑 Clave</button>`;
+    }
     if ((vista === 'compras' || vista === 'reservas') && esAdmin){
       botones += ` <button class="peligro" style="padding:4px 10px;font-size:12px;" onclick="window.__borrarCompraCompleta('${fila[t.pk]}')">Borrar todo</button>`;
     }
@@ -1788,6 +1791,93 @@ function formatoCelda(valor, columna){
   if (typeof valor === 'string' && valor.match(/^\d{4}-\d{2}-\d{2}T/)) return new Date(valor).toLocaleString('es-VE',{dateStyle:'medium',timeStyle:'short'});
   return escapeHtml(String(valor));
 }
+
+/* CLAVE-TEMPORAL: inicio */
+window.__claveTemporal = (vista, pkValor)=>{
+  const t = TABLAS[vista];
+  const fila = (filasCache||[]).find(f=>String(f[t.pk])===String(pkValor));
+  if (!fila) return;
+  const correoInicial = (vista==='afiliados' ? fila.correo_cliente : fila.email) || '';
+  const nombre = [fila.nombre, fila.apellido].filter(Boolean).join(' ') || fila.codigo_propio || fila.afiliado_id || '';
+  const gen = ()=>{
+    const l='abcdefghjkmnpqrstuvwxyz', a=new Uint32Array(3);
+    crypto.getRandomValues(a);
+    return 'Na'+(a[0]%9000+1000)+l[a[1]%l.length]+l[a[2]%l.length];
+  };
+
+  const fondo = document.createElement('div');
+  fondo.className = 'fondo-modal activo';
+  fondo.innerHTML = `<div class="modal" style="max-width:440px">
+    <h3>🔑 Clave temporal</h3>
+    <p style="margin:0 0 14px;color:var(--tinta-suave);font-size:12.5px">${escapeHtml(String(nombre))}</p>
+    <div class="campo" style="margin-bottom:12px"><label>Correo de acceso</label>
+      <input id="ct-correo" type="email" value="${escapeHtml(correoInicial)}" placeholder="correo@ejemplo.com"></div>
+    <div class="campo"><label>Clave temporal</label>
+      <div style="display:flex;gap:8px"><input id="ct-clave" type="text" value="${gen()}" style="flex:1" autocomplete="off">
+      <button type="button" class="secundario" id="ct-gen">Generar</button></div></div>
+    <p id="ct-msg" style="font-size:12.5px;margin:12px 0 0"></p>
+    <div class="acciones">
+      <button type="button" class="secundario" id="ct-cerrar">Cerrar</button>
+      <button type="button" class="secundario oculto" id="ct-copiar">Copiar mensaje</button>
+      <button type="button" id="ct-guardar">Guardar clave</button>
+    </div></div>`;
+  document.body.appendChild(fondo);
+
+  const $ = id => fondo.querySelector('#'+id);
+  const msg = $('ct-msg');
+  const decir = (txt, ok)=>{ msg.style.color = ok ? 'var(--verde-700)' : 'var(--rojo-600)'; msg.textContent = txt; };
+  const cerrar = ()=> fondo.remove();
+  let ultimo = null;
+
+  $('ct-cerrar').onclick = cerrar;
+  fondo.addEventListener('click', e=>{ if (e.target === fondo) cerrar(); });
+  $('ct-gen').onclick = ()=>{ $('ct-clave').value = gen(); };
+
+  $('ct-guardar').onclick = async ()=>{
+    const correo = $('ct-correo').value.trim().toLowerCase();
+    const clave = $('ct-clave').value;
+    if (!correo) return decir('Falta el correo.', false);
+    if (clave.length < 6) return decir('La clave debe tener al menos 6 caracteres.', false);
+    const b = $('ct-guardar');
+    b.disabled = true; b.textContent = 'Guardando…';
+    try{
+      const { data, error } = await sb.rpc('fn_admin_establecer_password', { p_email: correo, p_password: clave });
+      if (error || !data || !data.ok) throw new Error(error ? error.message : ((data && data.error) || 'No se pudo guardar'));
+      let aviso = '';
+      if (vista === 'afiliados'){
+        if (!fila.auth_user_id){
+          const { error: e2 } = await sb.from('afiliados').update({ auth_user_id: data.usuario_id }).eq('afiliado_id', fila.afiliado_id);
+          if (e2) throw new Error('La clave se guardó, pero no se pudo vincular al afiliado: ' + e2.message);
+          fila.auth_user_id = data.usuario_id;
+        } else if (fila.auth_user_id !== data.usuario_id){
+          aviso = ' ⚠️ Ese correo pertenece a una cuenta distinta a la que ya tenía este afiliado.';
+        }
+        if (!fila.correo_cliente && fila.usuario_id){
+          await sb.from('clientes').update({ correo }).eq('usuario_id', fila.usuario_id);
+          fila.correo_cliente = correo;
+        }
+      }
+      ultimo = { correo, clave };
+      decir('✅ Listo. Ya puede entrar con esa clave.' + aviso, !aviso);
+      $('ct-copiar').classList.remove('oculto');
+    } catch(ex){
+      decir(ex.message, false);
+    } finally {
+      b.disabled = false; b.textContent = 'Guardar clave';
+    }
+  };
+
+  $('ct-copiar').onclick = async ()=>{
+    if (!ultimo) return;
+    const url = vista === 'afiliados' ? 'https://portal.naturalezaabierta.com'
+              : vista === 'usuarios_panel' ? location.origin + location.pathname : '';
+    const txt = 'Tu acceso a Naturaleza Abierta:\n' + (url ? url + '\n' : '') +
+                'Correo: ' + ultimo.correo + '\nClave temporal: ' + ultimo.clave;
+    try{ await navigator.clipboard.writeText(txt); $('ct-copiar').textContent = '¡Copiado!'; }
+    catch(e){ prompt('Copia este mensaje:', txt); }
+  };
+};
+/* CLAVE-TEMPORAL: fin */
 
 function escapeHtml(s){
   return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
