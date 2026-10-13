@@ -504,6 +504,51 @@
     .rejilla-dashboard{grid-template-columns:1fr;}
     .fila-lote-detalle{grid-template-columns:1fr;gap:8px;}
   }
+  /* ===== MOVIL-APP: inicio ===== */
+  #barra-movil,#velo-menu{display:none}
+  @media(max-width:900px){
+    html,body{max-width:100%;overflow-x:hidden}
+    body{font-size:14px}
+    #app.activo{display:block}
+
+    #barra-movil{display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:60;
+    background:var(--verde-950);color:#fff;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top))}
+    #btn-menu{width:40px;height:40px;padding:0;font-size:20px;background:rgba(255,255,255,.12)}
+    #titulo-movil{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    aside{position:fixed;top:0;left:0;bottom:0;width:280px;max-width:84vw;height:100dvh;z-index:200;
+    transform:translateX(-102%);transition:transform .22s ease;padding:18px 14px;overflow-y:auto}
+    #app.menu-abierto aside{transform:none;box-shadow:var(--sombra-lg)}
+    aside .marca{border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:12px;padding-bottom:18px}
+    aside nav{flex-direction:column;overflow:visible}
+    aside nav button.enlace{padding:12px;font-size:14px}
+    aside .separador{display:block}
+    aside .pie-usuario{display:block}
+    #velo-menu{position:fixed;inset:0;background:rgba(18,33,25,.5);z-index:150}
+    #app.menu-abierto #velo-menu{display:block}
+
+    main{padding:14px 12px 40px;min-width:0;max-width:100%;overflow-x:hidden}
+    header.topbar{margin-bottom:14px}
+    header.topbar h2{font-size:19px}
+
+    .panel-tabla{max-width:100%}
+    .panel-tabla .barra{padding:12px}
+    .panel-tabla .barra input[type="search"]{max-width:none;width:100%}
+    table.datos th,table.datos td{padding:10px}
+
+    .fondo-modal{padding:16px 10px}
+    .modal{padding:20px 16px}
+    .modal .rejilla{grid-template-columns:1fr}
+    input,select,textarea{font-size:16px}
+
+    .tarjetas-resumen{grid-template-columns:1fr 1fr;gap:10px}
+    .tarjeta{padding:14px}
+    .tarjeta .num{font-size:21px}
+    .tab-lotes{overflow-x:auto}
+    .tab-lotes button{white-space:nowrap}
+    .rejilla-dashboard .tarjeta-grafico{padding:14px}
+  }
+/* ===== MOVIL-APP: fin ===== */
 </style>
 </head>
 <body>
@@ -575,6 +620,8 @@
 
 <!-- ================= APP ================= -->
 <div id="app">
+<div id="barra-movil"><button id="btn-menu" aria-label="Menú">☰</button><span id="titulo-movil">Naturaleza Abierta</span></div>
+<div id="velo-menu"></div>
   <aside>
     <div class="marca">
       <img class="hoja" alt="Naturaleza Abierta" src="https://www.naturalezaabierta.com/wp-content/uploads/2026/03/cropped-cropped-solo-logo-WEB2.png">
@@ -3199,6 +3246,18 @@ sb.auth.onAuthStateChange((evento)=>{
   function buscar(){document.querySelectorAll('input[type=password]').forEach(poner);}
   buscar();
   new MutationObserver(buscar).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+<script>
+/* MOVIL-APP */
+(function(){
+  const app=document.getElementById('app');
+  const cerrar=()=>app.classList.remove('menu-abierto');
+  document.getElementById('btn-menu').onclick=()=>app.classList.toggle('menu-abierto');
+  document.getElementById('velo-menu').onclick=cerrar;
+  document.getElementById('nav-principal').addEventListener('click',cerrar);
+  const t=document.getElementById('titulo-vista'),m=document.getElementById('titulo-movil');
+  new MutationObserver(()=>{m.textContent=t.textContent}).observe(t,{childList:true,characterData:true,subtree:true});
 })();
 </script>
 </body>
