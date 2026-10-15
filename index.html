@@ -2745,6 +2745,7 @@ window.__toggleLote = async (loteId)=>{
   const { data: detalle, error } = await sb.from('lotes_pago_detalle').select('*').eq('lote_id', loteId);
   if (error){ cont.innerHTML = `<div class="vacio">${error.message}</div>`; return; }
 
+  const mapa = await mapaAfiliadosInfo(detalle.map(d=>d.afiliado_id));
   const puedeGestionarPagos = puedeEditar('comisiones');
   cont.innerHTML = `
     <div class="fila-lote-detalle" style="font-weight:700;color:var(--tinta-suave);font-size:11px;text-transform:uppercase;letter-spacing:.04em;">
@@ -2753,7 +2754,7 @@ window.__toggleLote = async (loteId)=>{
     ${detalle.map(d=>`
       <div class="fila-lote-detalle" data-detalle="${d.detalle_id}">
         <span>${escapeHtml(d.afiliado_id)}</span>
-        <input type="text" placeholder="Ej: Pago móvil, Binance…" value="${escapeHtml(d.metodo_pago||'')}" data-campo="metodo_pago" ${(!puedeGestionarPagos||d.estado_pago==='Pagado')?'disabled':''}>
+        <input type="text" placeholder="Ej: Pago móvil, Binance…" value="${escapeHtml(d.metodo_pago || (mapa[d.afiliado_id]||{}).metodo || '')}" data-campo="metodo_pago" ${(!puedeGestionarPagos||d.estado_pago==='Pagado')?'disabled':''}>
         <input type="text" placeholder="N° de referencia" value="${escapeHtml(d.referencia_pago||'')}" data-campo="referencia_pago" ${(!puedeGestionarPagos||d.estado_pago==='Pagado')?'disabled':''}>
         <span style="font-weight:600;">$${Number(d.monto_total||0).toFixed(2)}</span>
         ${puedeGestionarPagos ? (d.estado_pago==='Pagado'
