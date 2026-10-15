@@ -1937,12 +1937,12 @@ window.__verAsistentes = async (eventoId)=>{
   cont.innerHTML = `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <button id="asist-volver" class="secundario">← Volver</button>
       <button id="asist-copiar" class="secundario">Copiar lista</button></div>
-    <div class="panel-tabla"><div style="overflow-x:auto"><table class="datos"><thead><tr><th>Nombre y apellido</th>${completa?'<th>Cédula</th><th>Teléfono</th>':''}<th>Personas</th>${completa?'<th>Pagó</th>':''}<th>Saldo (efectivo)</th></tr></thead><tbody>${
-      lista.map(a=>`<tr><td>${escapeHtml(nom(a)||'—')}</td>${completa?`<td>${escapeHtml(a.cedula||'—')}</td><td>${escapeHtml(a.telefono||'—')}</td>`:''}<td>${a.personas}</td>${completa?`<td>${m(a.pagado,a.moneda)}</td>`:''}<td>${m(a.saldo,a.moneda)}</td></tr>`).join('') || `<tr><td colspan="${cols}"><div class="vacio">Todavía no hay reservas pagadas.</div></td></tr>`
+    <div class="panel-tabla"><div style="overflow-x:auto"><table class="datos"><thead><tr><th>Nombre y apellido</th>${completa?'<th>Cédula</th><th>Teléfono</th>':''}<th>Personas (entraron)</th>${completa?'<th>Pagó</th>':''}<th>Saldo (efectivo)</th></tr></thead><tbody>${
+      lista.map(a=>`<tr><td>${escapeHtml(nom(a)||'—')}${(a.acompanantes||[]).length?`<br><small>Acompañantes: ${a.acompanantes.map(x=>escapeHtml(x.nombre)+(x.asistio?' ✓':'')).join(', ')}</small>`:''}</td>${completa?`<td>${escapeHtml(a.cedula||'—')}</td><td>${escapeHtml(a.telefono||'—')}</td>`:''}<td>${a.personas} <small>(${a.ingresadas||0} de ${a.personas})</small></td>${completa?`<td>${m(a.pagado,a.moneda)}</td>`:''}<td>${m(a.saldo,a.moneda)}</td></tr>`).join('') || `<tr><td colspan="${cols}"><div class="vacio">Todavía no hay reservas pagadas.</div></td></tr>`
     }</tbody></table></div></div>`;
   document.getElementById('asist-volver').onclick = ()=> cargarVista(volverA);
   document.getElementById('asist-copiar').onclick = ()=>{
-    const t = lista.map((a,i)=>`${i+1}. ${nom(a)}${completa?' · '+(a.cedula||'')+' · '+(a.telefono||''):''} · ${a.personas} pers. · saldo ${Number(a.saldo||0).toFixed(2)}`).join('\n');
+    const t = lista.map((a,i)=>`${i+1}. ${nom(a)}${completa?' · '+(a.cedula||'')+' · '+(a.telefono||''):''} · ${a.personas} pers.${(a.acompanantes||[]).length?' (con '+a.acompanantes.map(x=>x.nombre).join(', ')+')':''} · saldo ${Number(a.saldo||0).toFixed(2)}`).join('\n');
     navigator.clipboard.writeText(t).then(()=>alert('Lista copiada.'));
   };
 };
