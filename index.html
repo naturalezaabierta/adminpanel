@@ -1593,6 +1593,12 @@ async function cargarVista(vista){
     btnNuevo.textContent = '+ Agregar';
     btnNuevo.onclick = ()=> vista === 'usuarios_panel' ? abrirModalNuevoUsuario() : abrirModal(vista, null);
     document.getElementById('acciones-vista').appendChild(btnNuevo);
+  if (vista === 'afiliados'){
+      const btnAf = document.createElement('button');
+      btnAf.textContent = '+ Nuevo afiliado con código';
+      btnAf.onclick = ()=> window.__nuevoAfiliado();
+      document.getElementById('acciones-vista').appendChild(btnAf);
+    }
   }
 
   let query = sb.from(TABLAS[vista].tabla || vista).select('*').limit(500);
@@ -1878,6 +1884,174 @@ window.__claveTemporal = (vista, pkValor)=>{
   };
 };
 /* CLAVE-TEMPORAL: fin */
+
+/* NUEVO-AFILIADO: inicio */
+window.__nuevoAfiliado = ()=>{
+  if (!puedeEditar('afiliados') || !puedeEditar('clientes')){ alert('No tienes permiso para crear afiliados.'); return; }
+ 
+  const gen = ()=>{
+    const l='abcdefghjkmnpqrstuvwxyz', a=new Uint32Array(3);
+    crypto.getRandomValues(a);
+    return 'Na'+(a[0]%9000+1000)+l[a[1]%l.length]+l[a[2]%l.length];
+  };
+  const idStamp = ()=>{
+    const d=new Date(), p=n=>String(n).padStart(2,'0');
+    return String(d.getFullYear()).slice(2)+p(d.getMonth()+1)+p(d.getDate())+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds());
+  };
+  // 0414 1234567 -> 584141234567. Si es de otro país, escríbelo completo con su código (ej. 573001234567).
+  const normTel = v=>{
+    let d = String(v||'').replace(/\D/g,'');
+    if (d.startsWith('00')) d = d.slice(2);
+    if (d.startsWith('0')) d = '58' + d.slice(1);
+    else if (d.length === 10) d = '58' + d;
+    return d;
+  };
+ 
+  const fondo = document.createElement('div');
+  fondo.className = 'fondo-modal activo';
+  fondo.innerHTML = `<div class="modal" style="max-width:480px;max-height:90vh;overflow:auto">
+    <h3>➕ Nuevo afiliado</h3>
+    <div class="campo"><label>Nombre *</label><input id="na-nombre" type="text" autocomplete="off"></div>
+    <div class="campo"><label>Apellido *</label><input id="na-apellido" type="text" autocomplete="off"></div>
+    <div class="campo"><label>Cédula</label><input id="na-cedula" type="text" autocomplete="off"></div>
+    <div class="campo"><label>WhatsApp *</label><input id="na-tel" type="tel" placeholder="0414 1234567" autocomplete="off"></div>
+    <div class="campo"><label>Correo (solo si va a entrar a su portal)</label><input id="na-correo" type="email" placeholder="correo@ejemplo.com" autocomplete="off"></div>
+    <div class="campo"><label>Código de quien lo refiere (opcional)</label><input id="na-padre" type="text" placeholder="NA-12345" autocomplete="off"></div>
+    <div class="campo"><label>Método de pago (opcional)</label>
+      <select id="na-metodo"><option value="">—</option><option>Pago Móvil</option><option>Zelle</option><option>Binance</option><option>PayPal</option><option>Zinli</option></select></div>
+    <div class="campo"><label>Datos de la cuenta (opcional)</label>
+      <textarea id="na-datos" rows="2" placeholder="Banesco - 04141234567 - V12345678"></textarea></div>
+    <p id="na-msg" style="font-size:12.5px;margin:12px 0 0"></p>
+    <div class="acciones">
+      <button type="button" class="secundario" id="na-cerrar">Cerrar</button>
+      <button type="button" class="secundario oculto" id="na-copiar">Copiar mensaje</button>
+      <button type="button" class="secundario oculto" id="na-wa">Abrir WhatsApp</button>
+      <button type="button" class="secundario oculto" id="na-mail">Enviar por correo</button>
+      <button type="button" id="na-crear">Crear afiliado</button>
+    </div></div>`;
+  document.body.appendChild(fondo);
+ 
+  const $ = id => fondo.querySelector('#'+id);
+  const msg = $('na-msg');
+  const decir = (txt, ok)=>{ msg.style.color = ok ? 'var(--verde-700)' : 'var(--rojo-600)'; msg.textContent = txt; };
+  let creado = false;
+  const cerrar = ()=>{ fondo.remove(); if (creado) cargarVista('afiliados'); };
+  $('na-cerrar').onclick = cerrar;
+ 
+  $('na-crear').onclick = async ()=>{
+    const nombre = $('na-nombre').value.trim();
+    const apellido = $('na-apellido').value.trim();
+    const cedula = $('na-cedula').value.trim();
+    const tel = normTel($('na-tel').value);
+    const correo = $('na-correo').value.trim().toLowerCase();
+    const codPadre = $('na-padre').value.trim().toUpperCase();
+    const metodo = $('na-metodo').value;
+    const datos = $('na-datos').value.trim();
+ 
+    if (!nombre || !apellido) return decir('Faltan el nombre y el apellido.', false);
+    if (!/^\d{11,15}$/.test(tel)) return decir('El WhatsApp no parece válido. Ejemplo: 0414 1234567', false);
+ 
+    const b = $('na-crear');
+    b.disabled = true; b.textContent = 'Creando…';
+    try{
+      // 1) Quién lo refiere (si se puso código)
+      let padreUsuario = null;
+      if (codPadre){
+        const { data: p, error: ep } = await sb.from('afiliados').select('usuario_id').eq('codigo_propio', codPadre).maybeSingle();
+        if (ep) throw new Error(ep.message);
+        if (!p) throw new Error('No existe ningún afiliado con el código ' + codPadre + '.');
+        padreUsuario = p.usuario_id;
+      }
+ 
+      // 2) Cliente: si el teléfono ya existe se reutiliza; si no, se crea
+      let usuarioId;
+      const { data: cli, error: ec } = await sb.from('clientes').select('usuario_id, numero_cedula, correo').eq('telefono', tel).maybeSingle();
+      if (ec) throw new Error(ec.message);
+      if (cli){
+        const { data: yaAf } = await sb.from('afiliados').select('codigo_propio').eq('usuario_id', cli.usuario_id).maybeSingle();
+        if (yaAf) throw new Error('Ese número ya es afiliado, con el código ' + yaAf.codigo_propio + '.');
+        usuarioId = cli.usuario_id;
+        if (padreUsuario && padreUsuario === usuarioId) throw new Error('Una persona no puede referirse a sí misma.');
+        const completar = {};
+        if (!cli.numero_cedula && cedula) completar.numero_cedula = cedula;
+        if (!cli.correo && correo) completar.correo = correo;
+        if (Object.keys(completar).length){
+          const { error: eu } = await sb.from('clientes').update(completar).eq('usuario_id', usuarioId);
+          if (eu) throw new Error(eu.message);
+        }
+      } else {
+        usuarioId = 'USR-' + idStamp();
+        const { error: ei } = await sb.from('clientes').insert({
+          usuario_id: usuarioId, nombre, apellido, numero_cedula: cedula || null, telefono: tel,
+          correo: correo || null, origen: 'Manual', estado_cliente: 'Activo', etapa_cliente: 'Afiliado'
+        });
+        if (ei) throw new Error('No se pudo crear el cliente: ' + ei.message);
+      }
+ 
+      // 3) Código de referido único (NA-12345)
+      let codigo = null;
+      for (let i = 0; i < 8 && !codigo; i++){
+        const c = 'NA-' + (Math.floor(Math.random()*90000) + 10000);
+        const { data: ex } = await sb.from('afiliados').select('afiliado_id').eq('codigo_propio', c).maybeSingle();
+        if (!ex) codigo = c;
+      }
+      if (!codigo) throw new Error('No se pudo generar un código único. Intenta de nuevo.');
+ 
+      // 4) Afiliado
+      const afiliadoId = 'AFL-' + idStamp();
+      const fila = {
+        afiliado_id: afiliadoId, usuario_id: usuarioId, codigo_propio: codigo,
+        referido_por_usuario_id: padreUsuario, programa: 'Standard',
+        saldo_acumulado: 0, ventas_referidas_totales: 0
+      };
+      if (metodo) fila.metodo_pago_preferido = metodo;
+      if (datos) fila.datos_pago_cuenta = datos;
+      const { error: ea } = await sb.from('afiliados').insert(fila);
+      if (ea) throw new Error('El cliente quedó registrado pero el afiliado no se creó: ' + ea.message + ' (puedes volver a intentarlo con el mismo teléfono).');
+      creado = true;
+ 
+      // 5) Acceso al portal (solo si se puso correo)
+      let clave = null, aviso = '';
+      if (correo){
+        const c = gen();
+        const { data, error } = await sb.rpc('fn_admin_establecer_password', { p_email: correo, p_password: c });
+        if (error || !data || !data.ok){
+          aviso = ' ⚠️ El acceso al portal no se pudo crear (' + (error ? error.message : (data && data.error)) + '). Hazlo después con el botón 🔑 Clave temporal.';
+        } else {
+          clave = c;
+          const { error: ev } = await sb.from('afiliados').update({ auth_user_id: data.usuario_id }).eq('afiliado_id', afiliadoId);
+          if (ev) aviso = ' ⚠️ La clave se creó pero no se pudo vincular: ' + ev.message;
+          if (data.creado === false) aviso += ' ⚠️ Ese correo ya tenía una cuenta: su clave anterior fue reemplazada.';
+        }
+      }
+ 
+      // 6) Mensaje listo para enviar
+      const url = 'https://portal.naturalezaabierta.com';
+      const txt = '¡Hola ' + nombre + '! 🌿 Ya eres parte del programa de afiliados de Naturaleza Abierta.\n\n' +
+        'Tu código de referido: ' + codigo + '\n' +
+        (clave ? '\nTu acceso al portal:\n' + url + '\nCorreo: ' + correo + '\nClave temporal: ' + clave + '\n' : '') +
+        '\nLas compras de las personas que refieras con tu código quedan registradas a tu nombre.';
+ 
+      decir('✅ Afiliado creado. Código: ' + codigo + '.' + aviso, !aviso);
+      b.classList.add('oculto');
+      $('na-copiar').classList.remove('oculto');
+      $('na-wa').classList.remove('oculto');
+      $('na-copiar').onclick = async ()=>{
+        try{ await navigator.clipboard.writeText(txt); $('na-copiar').textContent = '¡Copiado!'; }
+        catch(e){ prompt('Copia este mensaje:', txt); }
+      };
+      $('na-wa').onclick = ()=> window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(txt), '_blank');
+      if (correo){
+        $('na-mail').classList.remove('oculto');
+        $('na-mail').onclick = ()=> { location.href = 'mailto:' + correo + '?subject=' + encodeURIComponent('Tu código de afiliado · Naturaleza Abierta') + '&body=' + encodeURIComponent(txt); };
+      }
+    } catch(ex){
+      decir(ex.message, false);
+      b.disabled = false; b.textContent = 'Crear afiliado';
+    }
+  };
+};
+/* NUEVO-AFILIADO: fin */
 
 function escapeHtml(s){
   return s.replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -2372,6 +2546,47 @@ function activarFiltrosLote(){
   });
 }
 
+/* PAGOS-NOMBRES: inicio */
+async function mapaAfiliadosInfo(afIds){
+  const ids = [...new Set((afIds||[]).filter(Boolean))];
+  if (!ids.length) return {};
+  const { data: afs } = await sb.from('afiliados')
+    .select('afiliado_id, usuario_id, codigo_propio, metodo_pago_preferido, datos_pago_cuenta')
+    .in('afiliado_id', ids);
+  const uids = [...new Set((afs||[]).map(a=>a.usuario_id).filter(Boolean))];
+  let clis = [];
+  if (uids.length){
+    const r = await sb.from('clientes').select('usuario_id, nombre, apellido, telefono, numero_cedula').in('usuario_id', uids);
+    clis = r.data || [];
+  }
+  const mc = Object.fromEntries(clis.map(c=>[c.usuario_id, c]));
+  const mapa = {};
+  (afs||[]).forEach(a=>{
+    const c = mc[a.usuario_id] || {};
+    mapa[a.afiliado_id] = {
+      codigo: a.codigo_propio || '',
+      metodo: a.metodo_pago_preferido || '',
+      datos: a.datos_pago_cuenta || '',
+      nombre: [c.nombre, c.apellido].filter(Boolean).join(' ') || a.afiliado_id,
+      telefono: c.telefono || '',
+      cedula: c.numero_cedula || ''
+    };
+  });
+  return mapa;
+}
+window.__copiarTexto = async (btn)=>{
+  try{ await navigator.clipboard.writeText(btn.dataset.copia); const o = btn.textContent; btn.textContent = '¡Copiado!'; setTimeout(()=>{ btn.textContent = o; }, 1200); }
+  catch(e){ prompt('Copia esto:', btn.dataset.copia); }
+};
+function celdaAfiliado(info, afId){
+  info = info || {};
+  const datos = info.datos
+    ? `<br><span style="font-size:12px;">${escapeHtml(info.datos)}</span> <button type="button" class="secundario" style="padding:2px 8px;font-size:11px;" data-copia="${escapeHtml(info.datos)}" onclick="window.__copiarTexto(this)">Copiar</button>`
+    : `<br><span style="font-size:12px;color:var(--rojo-600);">Sin datos de cuenta</span>`;
+  return `<span><strong>${escapeHtml(info.nombre || afId)}</strong><br><span style="font-size:11.5px;color:var(--tinta-suave);">${escapeHtml(info.codigo || '')}${info.telefono ? ' · ' + escapeHtml(info.telefono) : ''}</span>${datos}</span>`;
+}
+/* PAGOS-NOMBRES: fin */
+
 async function renderComisionesPendientes(){
   const puedeGestionarPagos = puedeEditar('comisiones');
   const cuerpo = document.getElementById('cuerpo-pagos-masivos');
@@ -2386,8 +2601,7 @@ async function renderComisionesPendientes(){
     return;
   }
 
-  const { data: afiliados } = await sb.from('afiliados').select('afiliado_id, codigo_propio, metodo_pago_preferido, datos_pago_cuenta');
-  const mapaAfiliados = Object.fromEntries((afiliados||[]).map(a=>[a.afiliado_id, a]));
+  const mapaAfiliados = await mapaAfiliadosInfo(comisiones.map(c=>c.afiliado_id));
 
   const porAfiliado = {};
   comisiones.forEach(c=>{
@@ -2415,8 +2629,11 @@ async function renderComisionesPendientes(){
       <div class="grupo-afiliado">
         <div class="cab">
           <div>
-            <strong>${escapeHtml(afId)}</strong> · <span style="color:var(--tinta-suave);">${escapeHtml(info.codigo_propio||'')}</span>
-            <div style="font-size:12px;color:var(--tinta-suave);">${escapeHtml(info.metodo_pago_preferido||'Sin método de pago registrado')}</div>
+            <strong>${escapeHtml(info.nombre||afId)}</strong> · <span style="color:var(--tinta-suave);">${escapeHtml(info.codigo||'')}</span>
+            <div style="font-size:12px;color:var(--tinta-suave);">${escapeHtml(info.metodo||'Sin método de pago registrado')}${info.telefono?' · '+escapeHtml(info.telefono):''}${info.cedula?' · C.I. '+escapeHtml(info.cedula):''}</div>
+            ${info.datos
+              ? `<div style="font-size:12.5px;margin-top:3px;">${escapeHtml(info.datos)} <button type="button" class="secundario" style="padding:2px 8px;font-size:11px;" data-copia="${escapeHtml(info.datos)}" onclick="window.__copiarTexto(this)">Copiar</button></div>`
+              : `<div style="font-size:12px;color:var(--rojo-600);margin-top:3px;">Sin datos de cuenta</div>`}
           </div>
           <div style="text-align:right;">
             <label style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--verde-950);font-size:14px;cursor:pointer;">
