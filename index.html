@@ -1589,15 +1589,16 @@ async function cargarVista(vista){
   document.getElementById('contenido-vista').innerHTML = '<div class="cargando">Cargando datos…</div>';
 
   if (puedeEditar(vista)){
-    const btnNuevo = document.createElement('button');
-    btnNuevo.textContent = '+ Agregar';
-    btnNuevo.onclick = ()=> vista === 'usuarios_panel' ? abrirModalNuevoUsuario() : abrirModal(vista, null);
-    document.getElementById('acciones-vista').appendChild(btnNuevo);
-  if (vista === 'afiliados'){
+    if (vista === 'afiliados'){
       const btnAf = document.createElement('button');
-      btnAf.textContent = '+ Nuevo afiliado con código';
+      btnAf.textContent = '+ Nuevo afiliado';
       btnAf.onclick = ()=> window.__nuevoAfiliado();
       document.getElementById('acciones-vista').appendChild(btnAf);
+    } else {
+      const btnNuevo = document.createElement('button');
+      btnNuevo.textContent = '+ Agregar';
+      btnNuevo.onclick = ()=> vista === 'usuarios_panel' ? abrirModalNuevoUsuario() : abrirModal(vista, null);
+      document.getElementById('acciones-vista').appendChild(btnNuevo);
     }
   }
 
