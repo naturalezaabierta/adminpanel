@@ -1589,7 +1589,8 @@ async function cargarVista(vista){
   document.getElementById('contenido-vista').innerHTML = '<div class="cargando">Cargando datos…</div>';
 
   if (puedeEditar(vista)){
-    if (vista === 'afiliados'){
+    if (vista === 'afiliados' && esAdmin){
+      // El formulario nuevo reemplaza al "+ Agregar" genérico en Afiliados.
       const btnAf = document.createElement('button');
       btnAf.textContent = '+ Nuevo afiliado';
       btnAf.onclick = ()=> window.__nuevoAfiliado();
@@ -1888,7 +1889,10 @@ window.__claveTemporal = (vista, pkValor)=>{
 
 /* NUEVO-AFILIADO: inicio */
 window.__nuevoAfiliado = ()=>{
-  if (!puedeEditar('afiliados') || !puedeEditar('clientes')){ alert('No tienes permiso para crear afiliados.'); return; }
+  // Crear el cliente (tabla clientes) solo lo permite la base de datos a administradores (RLS),
+  // así que el formulario es solo para admin. Los demás roles con "editar" en Pagos a referidos
+  // siguen viendo el "+ Agregar" genérico.
+  if (!esAdmin){ alert('Solo un administrador puede crear afiliados con este formulario.'); return; }
  
   const gen = ()=>{
     const l='abcdefghjkmnpqrstuvwxyz', a=new Uint32Array(3);
