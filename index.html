@@ -908,6 +908,7 @@ const SUPABASE_URL = 'https://tgvcvnhrwswuxgjbpvwq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_EKV8OM1y96u-DV_kUPGwkg_BZuGdf4D';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+window.__sb = sb;
 
 let usuarioActual = null;
 let esAdmin = false;
@@ -3625,5 +3626,6 @@ sb.auth.onAuthStateChange((evento)=>{
   pasar();
 })();
 </script>
+<script type="module" src="asistente.js"></script>
 </body>
 </html>
