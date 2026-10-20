@@ -3657,10 +3657,6 @@ sb.auth.onAuthStateChange((evento)=>{
   new MutationObserver(pasar).observe(document.getElementById('contenido-vista'),{childList:true,subtree:true});
   pasar();
 })();
-  function pasar(){ document.querySelectorAll('table.datos').forEach(etiquetar); }
-  new MutationObserver(pasar).observe(document.getElementById('contenido-vista'),{childList:true,subtree:true});
-  pasar();
-})();
 </script>
 <script type="module" src="asistente.js"></script>
 </body>
