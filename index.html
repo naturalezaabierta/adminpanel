@@ -594,6 +594,27 @@
   table.datos td.vacio{display:none}
 }
 /* ===== MOVIL-TARJETAS-2: fin ===== */
+
+/* ===== MODO-TARJETAS (Compras y Reservas): tarjetas en cualquier ancho, sin barra de desliz ===== */
+.modo-tarjetas{background:transparent;border:none;box-shadow:none;overflow:visible}
+.modo-tarjetas .barra{background:#fff;border:1px solid var(--borde);border-radius:var(--radio);margin-bottom:12px}
+.modo-tarjetas table.datos,.modo-tarjetas table.datos tbody{display:block;width:100%}
+.modo-tarjetas table.datos thead{display:none}
+.modo-tarjetas table.datos tbody{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.modo-tarjetas table.datos tr{display:grid;grid-template-columns:1fr 1fr;column-gap:16px;align-content:start;background:#fff;border:1px solid var(--borde);border-radius:var(--radio);box-shadow:var(--sombra-sm);padding:12px 14px;margin:0}
+.modo-tarjetas table.datos tbody tr:hover{background:#fff}
+.modo-tarjetas table.datos td{display:block;text-align:left;padding:6px 0;min-width:0;max-width:none;overflow:visible;white-space:normal!important;word-break:break-word;border:none}
+.modo-tarjetas table.datos td::before{content:attr(data-label);display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--tinta-suave);margin-bottom:2px}
+.modo-tarjetas table.datos td:first-child{grid-column:1/-1;font-size:15px;font-weight:700;color:var(--tinta-fuerte);padding:0 0 8px;margin-bottom:4px;border-bottom:1px solid var(--borde-suave)}
+.modo-tarjetas table.datos td[data-label=""]::before,.modo-tarjetas table.datos td[colspan]::before{display:none}
+.modo-tarjetas table.datos td[data-label="Acciones"],.modo-tarjetas table.datos td[colspan]{grid-column:1/-1;border-top:1px solid var(--borde-suave);margin-top:6px;text-align:left!important;white-space:normal!important}
+.modo-tarjetas table.datos td[data-label="Acciones"]::before{display:none}
+.modo-tarjetas table.datos td.vacio{display:none}
+.modo-tarjetas table.datos td button{margin:0 6px 6px 0}
+.modo-tarjetas table.datos tr:has(> td[colspan]){grid-column:1/-1;display:block;background:transparent;border:none;box-shadow:none;padding:0}
+.modo-tarjetas table.datos td[colspan]{border:none!important;margin:0;padding:0;font-size:inherit;text-align:center!important}
+/* ===== MODO-TARJETAS: fin ===== */
+
 </style>
 </head>
 <body>
@@ -1668,9 +1689,11 @@ function renderTabla(vista, filas){
   const colsMostrar = cols.length ? cols : t.columnas.slice(0,5);
   const mostrarAcciones = puedeEditar(vista) || vista === 'usuarios_panel' || vista === 'asesores';
   paginacionTabla = { pagina: 1, porPagina: FILAS_POR_PAGINA_DEFECTO };
+  const VISTAS_EN_TARJETAS = ['compras','reservas'];   // agrega aquí más vistas si las quieres en tarjetas
+  const modoTarjetas = VISTAS_EN_TARJETAS.includes(vista);
 
   let html = `
-    <div class="panel-tabla">
+    <div class="panel-tabla${modoTarjetas ? ' modo-tarjetas' : ''}">
       <div class="barra" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between;">
         <input type="search" placeholder="🔍  Buscar en esta tabla…" id="buscador-tabla" style="flex:1;min-width:180px;">
         <label style="font-size:12px;color:var(--tinta-suave);display:flex;align-items:center;gap:6px;white-space:nowrap;">
