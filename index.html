@@ -2915,7 +2915,15 @@ function activarControlesEnvios(){
   document.getElementById('btn-hoy-envios')?.addEventListener('click', ()=>{ fechaEnvios = new Date().toISOString().slice(0,10); renderEnvios(); });
   document.getElementById('chk-solo-pendientes')?.addEventListener('change', e=>{ soloPendientesEnvio = e.target.checked; renderEnvios(); });
 }
-
+window.__marcarEntregado = async (compraId)=>{
+  if (!confirm('¿Confirmas que ya entregaste este pedido?')) return;
+  const { error } = await sb.from('compras').update({
+    estado_envio:'Entregado', fecha_envio: new Date().toISOString()
+  }).eq('compra_id', compraId);
+  if (error){ alert('No se pudo actualizar: ' + error.message); return; }
+  renderEnvios();
+};
+  
 window.__marcarEnviado = async (compraId)=>{
   const input = document.getElementById(`guia-${compraId}`);
   const guia = input.value.trim();
