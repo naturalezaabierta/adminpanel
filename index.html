@@ -583,6 +583,17 @@
   #paginador-tabla{padding:8px 0!important}
 }
 /* ===== MOVIL-TARJETAS: fin ===== */
+
+/* ===== MOVIL-TARJETAS-2: inicio (tarjetas compactas en 2 columnas) ===== */
+@media(max-width:700px){
+  table.datos tr{display:grid;grid-template-columns:1fr 1fr;column-gap:16px;padding:12px 14px}
+  table.datos td{display:block;text-align:left;padding:6px 0;min-width:0;border-bottom:none}
+  table.datos td::before{display:block;flex:none;max-width:none;margin-bottom:2px}
+  table.datos td:first-child{grid-column:1/-1;font-size:15px;padding:0 0 8px;margin-bottom:4px;border-bottom:1px solid var(--borde-suave)}
+  table.datos td[data-label="Acciones"],table.datos td[colspan]{grid-column:1/-1;border-top:1px solid var(--borde-suave);margin-top:6px}
+  table.datos td.vacio{display:none}
+}
+/* ===== MOVIL-TARJETAS-2: fin ===== */
 </style>
 </head>
 <body>
@@ -3636,9 +3647,16 @@ sb.auth.onAuthStateChange((evento)=>{
         if(td.tagName==='TD' && !td.hasAttribute('data-label')){
           td.setAttribute('data-label', td.colSpan>1 ? '' : (ths[i]||''));
         }
+        if(td.tagName==='TD'){
+          td.classList.toggle('vacio', i>0 && !td.querySelector('button,input,a') && /^(—|-|)$/.test(td.textContent.trim()));
+        }
       });
     });
   }
+  function pasar(){ document.querySelectorAll('table.datos').forEach(etiquetar); }
+  new MutationObserver(pasar).observe(document.getElementById('contenido-vista'),{childList:true,subtree:true});
+  pasar();
+})();
   function pasar(){ document.querySelectorAll('table.datos').forEach(etiquetar); }
   new MutationObserver(pasar).observe(document.getElementById('contenido-vista'),{childList:true,subtree:true});
   pasar();
