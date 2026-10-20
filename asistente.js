@@ -59,7 +59,7 @@
 #asist-fab{position:fixed;right:18px;bottom:18px;z-index:90;width:56px;height:56px;border-radius:50%;border:0;cursor:pointer;\
  background:var(--verde-800,#234131);color:#fff;font-size:26px;box-shadow:0 8px 24px rgba(18,33,25,.3);display:none;align-items:center;justify-content:center}\
 #asist-fab:hover{background:var(--verde-700,#2d503e)}\
-#asist-panel{position:fixed;right:18px;bottom:18px;z-index:95;width:min(410px,calc(100vw - 24px));height:min(660px,calc(100vh - 24px));\
+#asist-panel{position:fixed;transform:none;right:18px;bottom:18px;z-index:95;width:min(410px,calc(100vw - 24px));height:min(660px,calc(100vh - 24px));\
  background:#fff;border:1px solid var(--borde,#e2e8e3);border-radius:16px;box-shadow:0 20px 40px rgba(18,33,25,.25);display:none;flex-direction:column;overflow:hidden;font-size:14px;color:var(--tinta,#232d27)}\
 #asist-panel.abierto{display:flex}\
 .asist-cab{display:flex;align-items:center;gap:6px;padding:10px 12px;background:var(--verde-900,#1a3124);color:#fff}\
@@ -109,7 +109,7 @@
     var estilo = el('style'); estilo.textContent = CSS; document.head.appendChild(estilo);
 
     var fab = el('button'); fab.id = 'asist-fab'; fab.type = 'button'; fab.title = 'Asistente'; fab.setAttribute('aria-label', 'Abrir el asistente'); fab.textContent = '🤖';
-    var panel = el('aside'); panel.id = 'asist-panel'; panel.setAttribute('aria-label', 'Asistente');
+    var panel = el('div'); panel.id = 'asist-panel'; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Asistente');
     panel.innerHTML =
       '<div class="asist-cab"><strong>🤖 Asistente</strong>' +
       '<select id="asist-voz" title="Voz" aria-label="Elegir voz"></select>' +
