@@ -713,6 +713,7 @@
       <button class="enlace" data-vista="afiliados">🤝 Afiliados</button>
       <button class="enlace" data-vista="comisiones">💰 Comisiones</button>
       <button class="enlace" data-vista="pagosmasivos">⚡ Pagos masivos</button>
+      <button class="enlace" data-vista="embajadores">🌟 Embajadores</button>
 
       <div class="separador">Distribuidores</div>
       <button class="enlace" data-vista="inventario_distribuidor">📦 Inventario</button>
@@ -1586,6 +1587,12 @@ async function cargarVista(vista){
     document.getElementById('titulo-vista').textContent = 'Permisos por área';
     document.getElementById('subtitulo-vista').textContent = 'Quién puede editar o solo ver cada área del panel.';
     return renderPermisosArea();
+  }
+  if (vista === 'embajadores'){
+    if (!esAdmin) return mostrarSinAcceso('Embajadores');
+    document.getElementById('titulo-vista').textContent = 'Embajadores';
+    document.getElementById('subtitulo-vista').textContent = 'Afiliados gratuitos por 60 días: quién está activo, quién ya quedó fijo y quién venció.';
+    return renderEmbajadores();
   }
   if (vista === 'metodos_pago'){
     if (!esAdmin) return mostrarSinAcceso('Métodos de pago');
@@ -3269,7 +3276,81 @@ window.__verDetalleAuditoria = (jsonStr)=>{
     `Después:\n${r.datos_nuevos ? JSON.stringify(r.datos_nuevos, null, 2) : '—'}`
   );
 };
+async function renderEmbajadores(filtroEstado){
+  const filtro = filtroEstado || 'todos';
+  const cont = document.getElementById('contenido-vista');
+  cont.innerHTML = `<div class="cargando">Cargando embajadores…</div>`;
 
+  const { data, error } = await sb.rpc('fn_panel_embajadores');
+  if (error || !data){
+    cont.innerHTML = `<div class="vacio">No se pudo cargar: ${escapeHtml((error && error.message) || 'sin datos')}</div>`;
+    return;
+  }
+
+  const res = data.resumen || {};
+  const todos = data.embajadores || [];
+  const cuenta = e => todos.filter(x => x.estado === e).length;
+  const lista = filtro === 'todos' ? todos : todos.filter(x => x.estado === filtro);
+
+  const chipEstado = e => e === 'fijo' ? chip('Fijo', true)
+                        : e === 'vencido' ? chip('Vencido', false)
+                        : chip('Activo');
+  const tarjeta = (titulo, valor) => `
+    <div style="background:#fff;border:1px solid var(--borde,#e3e0d4);border-radius:10px;padding:12px 16px;min-width:140px;">
+      <div style="font-size:12px;color:var(--tinta-suave);">${titulo}</div>
+      <div style="font-size:22px;font-weight:600;">${valor}</div>
+    </div>`;
+
+  cont.innerHTML = `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+      ${tarjeta('Cupos ocupados', (res.ocupados ?? 0) + ' de ' + (res.cupos ?? 0))}
+      ${tarjeta('Cupos disponibles', res.disponibles ?? 0)}
+      ${tarjeta('Activos (en prueba)', cuenta('activo'))}
+      ${tarjeta('Fijos (ya vendieron)', cuenta('fijo'))}
+      ${tarjeta('Vencidos', cuenta('vencido'))}
+    </div>
+
+    <div style="margin-bottom:14px;max-width:240px;">
+      <select id="filtro-embajadores">
+        <option value="todos" ${filtro==='todos'?'selected':''}>Todos</option>
+        <option value="activo" ${filtro==='activo'?'selected':''}>Activos</option>
+        <option value="fijo" ${filtro==='fijo'?'selected':''}>Fijos</option>
+        <option value="vencido" ${filtro==='vencido'?'selected':''}>Vencidos</option>
+      </select>
+    </div>
+
+    <div class="panel-tabla">
+      <div style="overflow-x:auto;">
+      <table class="datos"><thead><tr>
+        <th>Nombre</th><th>WhatsApp</th><th>Correo</th><th>Código</th><th>Red social</th>
+        <th>Estado</th><th>Registrado</th><th>Vence</th><th>Días restantes</th><th>Comisiones</th>
+      </tr></thead>
+      <tbody>
+        ${lista.map(e => `
+          <tr>
+            <td>${escapeHtml((e.nombre||'') + ' ' + (e.apellido||''))}</td>
+            <td>${escapeHtml(e.telefono || '—')}</td>
+            <td>${escapeHtml(e.correo || '—')}</td>
+            <td>${escapeHtml(e.codigo_propio || '—')}</td>
+            <td>${escapeHtml(e.red_social || '—')}</td>
+            <td>${chipEstado(e.estado)}</td>
+            <td>${fdt(e.registrado_en)}</td>
+            <td>${e.estado === 'activo' ? fdt(e.vence_en) : '—'}</td>
+            <td>${e.dias_restantes != null ? e.dias_restantes : '—'}</td>
+            <td>${e.comisiones ?? 0}</td>
+          </tr>
+        `).join('') || `<tr><td colspan="10" class="vacio">Todavía no hay embajadores en esta lista.</td></tr>`}
+      </tbody></table>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--tinta-suave);margin-top:10px;">
+      Los cupos y los días de vigencia se cambian en Configuración: <b>cupos_embajadores</b> y <b>dias_vigencia_embajador</b>.
+      Cada 30 minutos el sistema fija a quien ya tuvo una venta y vence a quien pasó los días sin ventas.
+    </p>
+  `;
+
+  document.getElementById('filtro-embajadores').onchange = ev => renderEmbajadores(ev.target.value);
+}
 async function renderRendimientoAsesores(diasFiltro){
   const dias = diasFiltro || 30;
   const cont = document.getElementById('contenido-vista');
