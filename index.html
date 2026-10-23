@@ -1592,6 +1592,12 @@ async function cargarVista(vista){
     if (!esAdmin) return mostrarSinAcceso('Embajadores');
     document.getElementById('titulo-vista').textContent = 'Embajadores';
     document.getElementById('subtitulo-vista').textContent = 'Afiliados gratuitos por 60 días: quién está activo, quién ya quedó fijo y quién venció.';
+    if (esAdmin){
+      const btnEmb = document.createElement('button');
+      btnEmb.textContent = '+ Agregar embajador';
+      btnEmb.onclick = ()=> window.__nuevoEmbajador();
+      document.getElementById('acciones-vista').appendChild(btnEmb);
+    }
     return renderEmbajadores();
   }
   if (vista === 'metodos_pago'){
