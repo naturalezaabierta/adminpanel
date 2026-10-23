@@ -3282,6 +3282,7 @@ window.__verDetalleAuditoria = (jsonStr)=>{
     `Después:\n${r.datos_nuevos ? JSON.stringify(r.datos_nuevos, null, 2) : '—'}`
   );
 };
+/* EMBAJADORES-ADMIN: inicio */
 async function renderEmbajadores(filtroEstado){
   const filtro = filtroEstado || 'todos';
   const cont = document.getElementById('contenido-vista');
@@ -3295,6 +3296,7 @@ async function renderEmbajadores(filtroEstado){
 
   const res = data.resumen || {};
   const todos = data.embajadores || [];
+  window.__embajadoresCache = todos;
   const cuenta = e => todos.filter(x => x.estado === e).length;
   const lista = filtro === 'todos' ? todos : todos.filter(x => x.estado === filtro);
 
@@ -3329,7 +3331,7 @@ async function renderEmbajadores(filtroEstado){
       <div style="overflow-x:auto;">
       <table class="datos"><thead><tr>
         <th>Nombre</th><th>WhatsApp</th><th>Correo</th><th>Código</th><th>Red social</th>
-        <th>Estado</th><th>Registrado</th><th>Vence</th><th>Días restantes</th><th>Comisiones</th>
+        <th>Estado</th><th>Registrado</th><th>Vence</th><th>Días restantes</th><th>Comisiones</th><th></th>
       </tr></thead>
       <tbody>
         ${lista.map(e => `
@@ -3344,19 +3346,178 @@ async function renderEmbajadores(filtroEstado){
             <td>${e.estado === 'activo' ? fdt(e.vence_en) : '—'}</td>
             <td>${e.dias_restantes != null ? e.dias_restantes : '—'}</td>
             <td>${e.comisiones ?? 0}</td>
+            <td><button type="button" class="peligro" style="padding:4px 10px;font-size:12px" data-eliminar-embajador="${escapeHtml(e.embajador_id)}">Eliminar</button></td>
           </tr>
-        `).join('') || `<tr><td colspan="10" class="vacio">Todavía no hay embajadores en esta lista.</td></tr>`}
+        `).join('') || `<tr><td colspan="11" class="vacio">Todavía no hay embajadores en esta lista.</td></tr>`}
       </tbody></table>
       </div>
     </div>
     <p style="font-size:12px;color:var(--tinta-suave);margin-top:10px;">
       Los cupos y los días de vigencia se cambian en Configuración: <b>cupos_embajadores</b> y <b>dias_vigencia_embajador</b>.
       Cada 30 minutos el sistema fija a quien ya tuvo una venta y vence a quien pasó los días sin ventas.
+      Eliminar solo funciona si la persona todavía no tiene ventas, comisiones ni referidos; así se libera el cupo y puede volver a registrarse.
     </p>
   `;
 
   document.getElementById('filtro-embajadores').onchange = ev => renderEmbajadores(ev.target.value);
+  cont.querySelectorAll('[data-eliminar-embajador]').forEach(b => {
+    b.onclick = () => window.__eliminarEmbajador(b.dataset.eliminarEmbajador);
+  });
 }
+
+window.__eliminarEmbajador = async (id)=>{
+  if (!esAdmin){ alert('Solo un administrador puede eliminar embajadores.'); return; }
+  const e = (window.__embajadoresCache || []).find(x => x.embajador_id === id);
+  if (!e) return;
+  const quien = ((e.nombre||'') + ' ' + (e.apellido||'')).trim() + (e.codigo_propio ? ' (' + e.codigo_propio + ')' : '');
+  const aviso = e.estado === 'vencido'
+    ? '¿Quitar el registro vencido de ' + quien + '?\n\nLa persona podrá volver a registrarse como embajador.'
+    : '¿Eliminar a ' + quien + '?\n\nSe borra su código y se libera el cupo. Solo se puede si todavía no tiene ventas, comisiones ni referidos.';
+  if (!confirm(aviso)) return;
+
+  const { data, error } = await sb.rpc('fn_panel_eliminar_embajador', { p_embajador_id: id });
+  if (error || !data || !data.ok){
+    const c = data && data.error;
+    const m = c === 'tiene_actividad' ? 'No se puede eliminar: ya tiene ventas, comisiones o referidos. Gestiona esa cuenta desde Pagos a referidos → Afiliados.'
+            : c === 'no_encontrado' ? 'Ese embajador ya no existe. Se recarga la lista.'
+            : c === 'sin_permiso' ? 'No tienes permiso para eliminar embajadores.'
+            : 'No se pudo eliminar: ' + ((error && error.message) || (data && data.detalle) || c || 'error desconocido');
+    alert(m);
+    if (c === 'no_encontrado') renderEmbajadores();
+    return;
+  }
+  renderEmbajadores();
+};
+
+window.__nuevoEmbajador = ()=>{
+  if (!esAdmin){ alert('Solo un administrador puede agregar embajadores.'); return; }
+
+  const gen = ()=>{
+    const l='abcdefghjkmnpqrstuvwxyz', a=new Uint32Array(3);
+    crypto.getRandomValues(a);
+    return 'Na'+(a[0]%9000+1000)+l[a[1]%l.length]+l[a[2]%l.length];
+  };
+  // 0414 1234567 -> 584141234567
+  const normTel = v=>{
+    let d = String(v||'').replace(/\D/g,'');
+    if (d.startsWith('00')) d = d.slice(2);
+    if (d.startsWith('0')) d = '58' + d.slice(1);
+    else if (d.length === 10) d = '58' + d;
+    return d;
+  };
+
+  const fondo = document.createElement('div');
+  fondo.className = 'fondo-modal activo';
+  fondo.innerHTML = `<div class="modal" style="max-width:480px;max-height:90vh;overflow:auto">
+    <h3>🌟 Agregar embajador</h3>
+    <p style="margin:0 0 14px;color:var(--tinta-suave);font-size:12.5px">Cuenta como un cupo gratuito y vence igual que los demás si no vende.</p>
+    <div class="campo"><label>Nombre *</label><input id="ne-nombre" type="text" autocomplete="off"></div>
+    <div class="campo"><label>Apellido *</label><input id="ne-apellido" type="text" autocomplete="off"></div>
+    <div class="campo"><label>WhatsApp *</label><input id="ne-tel" type="tel" placeholder="0414 1234567" autocomplete="off"></div>
+    <div class="campo"><label>Cédula *</label><input id="ne-cedula" type="text" placeholder="V12345678" autocomplete="off"></div>
+    <div class="campo"><label>Correo *</label><input id="ne-correo" type="email" placeholder="correo@ejemplo.com" autocomplete="off"></div>
+    <div class="campo"><label>Banco (opcional)</label><input id="ne-banco" type="text" placeholder="Banesco" autocomplete="off"></div>
+    <div class="campo"><label>Teléfono de Pago Móvil (opcional)</label><input id="ne-telpago" type="tel" placeholder="0414 1234567" autocomplete="off"></div>
+    <div class="campo"><label>Red social (opcional)</label><input id="ne-red" type="text" placeholder="@usuario" autocomplete="off"></div>
+    <label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px;cursor:pointer">
+      <input id="ne-acceso" type="checkbox" checked style="margin-top:3px;width:auto">
+      <span>Crear su acceso al portal con una clave temporal</span>
+    </label>
+    <p id="ne-msg" style="font-size:12.5px;margin:12px 0 0"></p>
+    <div class="acciones">
+      <button type="button" class="secundario" id="ne-cerrar">Cerrar</button>
+      <button type="button" class="secundario oculto" id="ne-copiar">Copiar mensaje</button>
+      <button type="button" class="secundario oculto" id="ne-wa">Abrir WhatsApp</button>
+      <button type="button" id="ne-crear">Agregar embajador</button>
+    </div></div>`;
+  document.body.appendChild(fondo);
+
+  const $ = id => fondo.querySelector('#'+id);
+  const msg = $('ne-msg');
+  const decir = (txt, ok)=>{ msg.style.color = ok ? 'var(--verde-700)' : 'var(--rojo-600)'; msg.textContent = txt; };
+  let creado = false;
+  const cerrar = ()=>{ fondo.remove(); if (creado) renderEmbajadores(); };
+  $('ne-cerrar').onclick = cerrar;
+
+  const ERRORES = {
+    datos_invalidos: 'Revisa el nombre y el apellido.',
+    telefono_invalido: 'El WhatsApp no parece válido. Ejemplo: 0414 1234567',
+    cedula_invalida: 'Revisa la cédula.',
+    correo_invalido: 'Revisa el correo.',
+    datos_pago_invalidos: 'Revisa el teléfono de Pago Móvil (o déjalo vacío).',
+    ya_registrado: 'Ese WhatsApp, cédula o correo ya está registrado como embajador.',
+    ya_vencido: 'Esa persona ya tuvo un registro que venció. Quita primero ese registro vencido en la lista (botón Eliminar) y vuelve a agregarla.',
+    ya_afiliado: 'Ese número ya es afiliado y tiene su propio código.',
+    sin_cupos: 'No quedan cupos. Súbelos en Configuración: cupos_embajadores.',
+    sin_codigo: 'No se pudo generar un código único. Intenta de nuevo.',
+    sin_permiso: 'No tienes permiso para agregar embajadores.'
+  };
+
+  $('ne-crear').onclick = async ()=>{
+    const nombre = $('ne-nombre').value.trim();
+    const apellido = $('ne-apellido').value.trim();
+    const tel = normTel($('ne-tel').value);
+    const cedula = $('ne-cedula').value.trim();
+    const correo = $('ne-correo').value.trim().toLowerCase();
+    const banco = $('ne-banco').value.trim();
+    const telPago = $('ne-telpago').value.trim();
+    const red = $('ne-red').value.trim();
+
+    if (!nombre || !apellido) return decir('Faltan el nombre y el apellido.', false);
+    if (!/^\d{12}$/.test(tel)) return decir('El WhatsApp no parece válido. Ejemplo: 0414 1234567', false);
+    if (!cedula) return decir('Falta la cédula.', false);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo)) return decir('Revisa el correo.', false);
+
+    const b = $('ne-crear');
+    b.disabled = true; b.textContent = 'Agregando…';
+    try{
+      const { data, error } = await sb.rpc('fn_panel_agregar_embajador', {
+        p_nombre: nombre, p_apellido: apellido, p_telefono: tel, p_cedula: cedula, p_correo: correo,
+        p_banco: banco || null, p_telefono_pago: telPago || null, p_red_social: red || null
+      });
+      if (error) throw new Error(error.message);
+      if (!data || !data.ok) throw new Error(ERRORES[data && data.error] || 'No se pudo agregar.');
+      creado = true;
+
+      let clave = null, aviso = '';
+      if ($('ne-acceso').checked){
+        const c = gen();
+        const r = await sb.rpc('fn_admin_establecer_password', { p_email: correo, p_password: c });
+        if (r.error || !r.data || !r.data.ok){
+          aviso = ' ⚠️ El acceso al portal no se pudo crear (' + (r.error ? r.error.message : (r.data && r.data.error)) + '). Hazlo después con el botón 🔑 Clave temporal.';
+        } else {
+          clave = c;
+          const { error: ev } = await sb.from('afiliados').update({ auth_user_id: r.data.usuario_id }).eq('afiliado_id', data.afiliado_id);
+          if (ev) aviso = ' ⚠️ La clave se creó pero no se pudo vincular: ' + ev.message;
+          if (r.data.creado === false) aviso += ' ⚠️ Ese correo ya tenía una cuenta: su clave anterior fue reemplazada.';
+        }
+      }
+
+      const vence = new Date(data.vence_en).toLocaleDateString('es-VE', { day:'numeric', month:'long', year:'numeric' });
+      const url = 'https://portal.naturalezaabierta.com';
+      const txt = '¡Hola ' + nombre + '! 🌿 Ya eres embajador(a) de Naturaleza Abierta.\n\n' +
+        'Tu código: ' + data.codigo_propio + ' (válido hasta el ' + vence + ').\n' +
+        'Si logras al menos una venta antes de esa fecha, tu código queda tuyo para siempre.\n\n' +
+        'Tu catálogo para compartir: ' + data.link_catalogo + '\n' +
+        'Tus creativos con tu código: ' + data.link_creativos + '\n' +
+        (clave ? '\nTu acceso al portal:\n' + url + '\nCorreo: ' + correo + '\nClave temporal: ' + clave + '\n' : '');
+
+      decir('✅ Embajador agregado. Código: ' + data.codigo_propio + '.' + aviso, !aviso);
+      b.classList.add('oculto');
+      $('ne-copiar').classList.remove('oculto');
+      $('ne-wa').classList.remove('oculto');
+      $('ne-copiar').onclick = async ()=>{
+        try{ await navigator.clipboard.writeText(txt); $('ne-copiar').textContent = '¡Copiado!'; }
+        catch(e){ prompt('Copia este mensaje:', txt); }
+      };
+      $('ne-wa').onclick = ()=> window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(txt), '_blank');
+    } catch(ex){
+      decir(ex.message, false);
+      b.disabled = false; b.textContent = 'Agregar embajador';
+    }
+  };
+};
+/* EMBAJADORES-ADMIN: fin */
 async function renderRendimientoAsesores(diasFiltro){
   const dias = diasFiltro || 30;
   const cont = document.getElementById('contenido-vista');
