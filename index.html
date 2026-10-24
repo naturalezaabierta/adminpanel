@@ -2808,7 +2808,7 @@ window.__toggleLote = async (loteId)=>{
     </div>
     ${detalle.map(d=>`
       <div class="fila-lote-detalle" data-detalle="${d.detalle_id}">
-        <span>${escapeHtml(d.afiliado_id)}</span>
+        <span>${escapeHtml((mapa[d.afiliado_id]||{}).nombre || d.afiliado_id)}${puedeGestionarPagos ? `<br><button type="button" class="secundario" style="padding:3px 9px;font-size:11px;margin-top:4px;" onclick="window.__subirComprobante('${loteId}','${d.detalle_id}','${d.afiliado_id}')">${d.comprobante_path ? '🔄 Cambiar' : '📎 Subir comprobante'}</button>` : ''}${d.comprobante_path ? `<br><button type="button" class="secundario" style="padding:3px 9px;font-size:11px;margin-top:4px;" onclick="window.__verComprobante('${d.comprobante_path}')">👁 Ver comprobante</button>` : ''}</span>
         <input type="text" placeholder="Ej: Pago móvil, Binance…" value="${escapeHtml(d.metodo_pago || (mapa[d.afiliado_id]||{}).metodo || '')}" data-campo="metodo_pago" ${(!puedeGestionarPagos||d.estado_pago==='Pagado')?'disabled':''}>
         <input type="text" placeholder="N° de referencia" value="${escapeHtml(d.referencia_pago||'')}" data-campo="referencia_pago" ${(!puedeGestionarPagos||d.estado_pago==='Pagado')?'disabled':''}>
         <span style="font-weight:600;">$${Number(d.monto_total||0).toFixed(2)}</span>
@@ -2819,6 +2819,31 @@ window.__toggleLote = async (loteId)=>{
       </div>
     `).join('')}
   `;
+};
+
+window.__subirComprobante = (loteId, detalleId, afiliadoId)=>{
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/jpeg,image/png,image/webp,application/pdf';
+  inp.onchange = async ()=>{
+    const f = inp.files[0];
+    if (!f) return;
+    if (f.size > 5*1024*1024){ alert('El archivo pesa más de 5 MB.'); return; }
+    const ext = (f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const ruta = `${afiliadoId}/${detalleId}-${Date.now()}.${ext}`;
+    const { error: e1 } = await sb.storage.from('comprobantes').upload(ruta, f, { contentType: f.type });
+    if (e1){ alert('No se pudo subir: ' + e1.message); return; }
+    const { error: e2 } = await sb.from('lotes_pago_detalle').update({ comprobante_path: ruta }).eq('detalle_id', detalleId);
+    if (e2){ alert('Se subió el archivo pero no se pudo guardar: ' + e2.message); return; }
+    window.__toggleLote(loteId); window.__toggleLote(loteId);
+  };
+  inp.click();
+};
+
+window.__verComprobante = async (ruta)=>{
+  const { data, error } = await sb.storage.from('comprobantes').createSignedUrl(ruta, 300);
+  if (error || !data){ alert('No se pudo abrir el comprobante.'); return; }
+  window.open(data.signedUrl, '_blank');
 };
 
 window.__marcarPagado = async (loteId, detalleId)=>{
