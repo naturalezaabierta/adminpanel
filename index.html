@@ -738,6 +738,7 @@
       <button class="enlace oculto" id="nav-usuarios" data-vista="usuarios_panel">👤 Usuarios del panel</button>
       <button class="enlace oculto" id="nav-auditoria" data-vista="auditoria">🕵️ Auditoría</button>
       <button class="enlace oculto" id="nav-reporte" data-vista="reporte_contable">📑 Reporte contable</button>
+      <button class="enlace oculto" id="nav-novedades" data-vista="novedades">📣 Novedades por correo</button>
     </nav>
     <div class="pie-usuario">
       <div class="usuario-info-box">
@@ -1409,6 +1410,7 @@ function mostrarApp(){
     document.getElementById('nav-permisos').classList.remove('oculto');
     document.getElementById('nav-auditoria').classList.remove('oculto');
     document.getElementById('nav-reporte').classList.remove('oculto');
+    document.getElementById('nav-novedades').classList.remove('oculto');
   } else {
     Object.keys(TABLAS).forEach(vista=>{
       const t = TABLAS[vista];
@@ -1588,6 +1590,12 @@ async function cargarVista(vista){
     document.getElementById('subtitulo-vista').textContent = 'Quién puede editar o solo ver cada área del panel.';
     return renderPermisosArea();
   }
+  if (vista === 'novedades'){
+    if (!esAdmin) return mostrarSinAcceso('Novedades por correo');
+    document.getElementById('titulo-vista').textContent = 'Novedades por correo';
+    document.getElementById('subtitulo-vista').textContent = 'Arma y envía el aviso de lo nuevo a embajadores y afiliados.';
+    return window.renderNovedades();
+  }
   if (vista === 'embajadores'){
     if (!esAdmin) return mostrarSinAcceso('Embajadores');
     document.getElementById('titulo-vista').textContent = 'Embajadores';
@@ -1735,6 +1743,9 @@ function renderTabla(vista, filas){
     }
     if ((vista === 'productos_servicios' || vista === 'eventos_experiencias') && puedeEditar(vista)){
       botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__clonarFila('${vista}','${fila[t.pk]}')">Clonar</button>`;
+    }
+    if (['productos_servicios','eventos_experiencias','creativos'].includes(vista) && puedeEditar(vista)){
+      botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__aNovedades('${vista}','${fila[t.pk]}')">📣 Envío masivo</button>`;
     }
     if (vista === 'eventos_experiencias'){
       botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__verAsistentes('${fila[t.pk]}')">Asistentes</button>`;
@@ -3955,5 +3966,6 @@ sb.auth.onAuthStateChange((evento)=>{
 })();
 </script>
 <script type="module" src="asistente.js"></script>
+<script type="module" src="novedades.js"></script>
 </body>
 </html>
