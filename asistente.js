@@ -226,6 +226,7 @@
           historial.push({ role: 'user', content: '(Confirmé y se ejecutó: ' + p.titulo + ')' });
           burbuja('bot', r.mensaje + ' Abre la sección correspondiente del panel y recárgala para verlo.');
           hablar(r.mensaje);
+        if (document.getElementById('nv-asunto') && window.renderNovedades) window.renderNovedades();
         } else {
           ok.disabled = false; no.disabled = false; ok.textContent = 'Confirmar';
           burbuja('err', (r && r.error) || 'No se pudo guardar.');
