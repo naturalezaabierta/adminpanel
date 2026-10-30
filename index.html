@@ -1431,6 +1431,7 @@ function mostrarApp(){
     }
     // Métodos de pago y Rendimiento de asesores: exclusivos de admin, sin importar el área.
     document.querySelector('#nav-principal .enlace[data-vista="metodos_pago"]')?.classList.add('oculto');
+    if (misPermisos['experiencias'] === 'editar') document.getElementById('nav-experiencias').classList.remove('oculto');
     document.querySelector('#nav-principal .enlace[data-vista="rendimiento_asesores"]')?.classList.add('oculto');
   }
   if (esAdmin){
@@ -1593,7 +1594,7 @@ async function cargarVista(vista){
     return renderPermisosArea();
   }
   if (vista === 'experiencias'){
-    if (!esAdmin) return mostrarSinAcceso('Experiencias');
+    if (!esAdmin && misPermisos['experiencias'] !== 'editar') return mostrarSinAcceso('Experiencias');
     document.getElementById('titulo-vista').textContent = 'Experiencias';
     document.getElementById('subtitulo-vista').textContent = 'Revisa y aprueba lo que la gente publica.';
     return window.renderExperiencias();
@@ -3035,6 +3036,7 @@ const AREAS_PERMISO = [
   { clave:'creativos', etiqueta:'Creativos' },
   { clave:'catalogo', etiqueta:'Catálogo' },
   { clave:'atencion_publico', etiqueta:'Atención al público' },
+  { clave:'experiencias', etiqueta:'Experiencias (moderar opiniones)' },
   // 'distribuidores' ya no es un área configurable: Inventario/Ventas de distribuidores
   // pasaron a ser exclusivos de administración (adminSolo), nadie más los ve desde el panel.
 ];
@@ -3059,6 +3061,10 @@ const ROLES_PANEL = [
       // le crea la cuenta -- de ahí en adelante inicia sesión por el CRM, no por acá.
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
       {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'editar'} ] },
+  { valor:'experiencias', etiqueta:'Moderador de experiencias', rolDb:'lectura', permisos:[
+      {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
+      {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'},
+      {area:'experiencias',nivel:'editar'} ] },
   { valor:'anfitrion', etiqueta:'Anfitrión (solo ve sus eventos)', rolDb:'lectura', permisos:[
       {area:'pedidos_envios',nivel:'sin_acceso'},{area:'pagos_referidos',nivel:'sin_acceso'},
       {area:'creativos',nivel:'sin_acceso'},{area:'catalogo',nivel:'sin_acceso'},{area:'atencion_publico',nivel:'sin_acceso'} ] },
