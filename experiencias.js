@@ -2,9 +2,10 @@
    experiencias.js · Pestaña "Experiencias" del panel de administración
    Modera lo que la gente envía desde la página pública de Experiencias.
    Requiere window.__sb (index.html ya lo expone).
-   Lee con la función fn_admin_experiencias; aprueba/rechaza/oculta/elimina
-   con la función de borde "experiencias" (acción moderar).
+   Lee con fn_admin_experiencias (paginada: 25 por página); aprueba/rechaza/
+   oculta/elimina con la función de borde "experiencias" (acción moderar).
    Necesita permiso 'experiencias' = editar para moderar (lectura = solo mirar).
+   Versión 2: tarjetas compactas en cuadrícula + paginación.
    ===================================================================== */
 (function () {
   'use strict';
@@ -12,11 +13,12 @@
   window.__experienciasListo = true;
 
   const SUPA = 'https://tgvcvnhrwswuxgjbpvwq.supabase.co';
-  const CATALOGO = 'https://catalogo.naturalezaabierta.com/';
+  const POR_PAGINA = 25;
   const sb = () => window.__sb;
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
   const ESTADOS = [['pendiente', 'Pendientes'], ['aprobada', 'Aprobadas'], ['oculta', 'Ocultas'], ['rechazada', 'Rechazadas']];
   let estadoActivo = 'pendiente';
+  let pagina = 0;
 
   function aviso(txt, malo) {
     const d = document.createElement('div');
@@ -54,10 +56,18 @@
     return data ? data.signedUrl : null;
   }
 
+  function barraPaginas(total, paginas) {
+    if (total <= POR_PAGINA) return '';
+    return '<div style="display:flex;gap:10px;align-items:center;justify-content:center;margin:12px 0;flex-wrap:wrap">' +
+      '<button class="secundario" data-pg="-1" style="padding:6px 14px;font-size:13px"' + (pagina <= 0 ? ' disabled' : '') + '>← Anterior</button>' +
+      '<span style="font-size:13px">Página ' + (pagina + 1) + ' de ' + paginas + ' · ' + total + ' en total</span>' +
+      '<button class="secundario" data-pg="1" style="padding:6px 14px;font-size:13px"' + (pagina >= paginas - 1 ? ' disabled' : '') + '>Siguiente →</button></div>';
+  }
+
   window.renderExperiencias = async function () {
     const cont = document.getElementById('contenido-vista');
     cont.innerHTML = '<div class="cargando">Cargando…</div>';
-    const { data: d, error } = await sb().rpc('fn_admin_experiencias', { p_estado: estadoActivo, p_limite: 100 });
+    const { data: d, error } = await sb().rpc('fn_admin_experiencias', { p_estado: estadoActivo, p_limite: POR_PAGINA, p_offset: pagina * POR_PAGINA });
     if (error || !d) {
       cont.innerHTML = '<div class="vacio">No se pudo cargar' + (error && error.code === '42501' ? ': no tienes acceso a esta área.' : '.') + '</div>';
       return;
@@ -65,46 +75,64 @@
     const edit = !!d.puede_editar;
     const conteos = d.conteos || {};
     const items = d.items || [];
+    const total = conteos[estadoActivo] || 0;
+    const paginas = Math.max(1, Math.ceil(total / POR_PAGINA));
 
-    let html = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">' + ESTADOS.map((e) =>
+    /* Si al aprobar/ocultar la página quedó vacía, vuelve a la última con datos */
+    if (!items.length && pagina > 0) { pagina = paginas - 1; return window.renderExperiencias(); }
+
+    const pend = conteos.pendiente || 0;
+    let html = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center">' + ESTADOS.map((e) =>
       '<button class="secundario" style="padding:6px 12px;font-size:13px;' + (e[0] === estadoActivo ? 'background:var(--verde-600);color:#fff;' : '') + '" data-est="' + e[0] + '">' +
-      e[1] + ' (' + (conteos[e[0]] || 0) + ')</button>').join('') + '</div>';
+      e[1] + ' (' + (conteos[e[0]] || 0) + ')</button>').join('') +
+      (pend && estadoActivo !== 'pendiente' ? '<span style="font-size:13px;color:#a12b2b;margin-left:6px">Tienes ' + pend + ' por revisar</span>' : '') + '</div>';
     if (!edit) html += '<div class="tarjeta" style="margin-bottom:12px;font-size:13px">Tienes acceso de solo lectura: puedes ver, pero no aprobar ni cambiar.</div>';
     if (!items.length) html += '<div class="vacio">No hay experiencias en esta lista.</div>';
 
+    html += barraPaginas(total, paginas);
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:10px;align-items:start">';
+
     html += items.map((it) => {
       const acc = [];
+      const b = 'padding:5px 10px;font-size:12px;';
       if (edit) {
-        if (it.estado !== 'aprobada') acc.push('<button data-acc="aprobada" data-id="' + it.id + '">✓ Aprobar</button>');
-        if (it.estado === 'aprobada') acc.push('<button class="secundario" data-acc="oculta" data-id="' + it.id + '">Ocultar</button>');
-        if (it.estado === 'pendiente') acc.push('<button class="secundario" data-acc="rechazada" data-id="' + it.id + '">Rechazar</button>');
-        if (it.estado !== 'pendiente' && it.estado !== 'aprobada') acc.push('<button class="secundario" data-acc="pendiente" data-id="' + it.id + '">Volver a pendiente</button>');
-        acc.push('<button class="secundario" data-guardar="' + it.id + '">Guardar edición</button>');
-        acc.push('<button class="peligro" data-acc="eliminar" data-id="' + it.id + '">Eliminar</button>');
+        if (it.estado !== 'aprobada') acc.push('<button style="' + b + '" data-acc="aprobada" data-id="' + it.id + '">✓ Aprobar</button>');
+        if (it.estado === 'aprobada') acc.push('<button class="secundario" style="' + b + '" data-acc="oculta" data-id="' + it.id + '">Ocultar</button>');
+        if (it.estado === 'pendiente') acc.push('<button class="secundario" style="' + b + '" data-acc="rechazada" data-id="' + it.id + '">Rechazar</button>');
+        if (it.estado !== 'pendiente' && it.estado !== 'aprobada') acc.push('<button class="secundario" style="' + b + '" data-acc="pendiente" data-id="' + it.id + '">A pendiente</button>');
+        acc.push('<button class="secundario" style="' + b + '" data-guardar="' + it.id + '">Guardar</button>');
+        acc.push('<button class="peligro" style="' + b + '" data-acc="eliminar" data-id="' + it.id + '">Eliminar</button>');
       }
-      const campo = 'width:100%;padding:8px 10px;border:1px solid var(--borde);border-radius:8px;font-size:14px;box-sizing:border-box;';
-      return '<div class="tarjeta" style="margin-bottom:12px;gap:8px" data-card="' + it.id + '">' +
-        '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--tinta-suave)">' +
+      const campo = 'width:100%;padding:5px 8px;border:1px solid var(--borde);border-radius:6px;font-size:13px;box-sizing:border-box;';
+      return '<div class="tarjeta" style="margin:0;padding:10px 12px;gap:6px" data-card="' + it.id + '">' +
+        '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--tinta-suave)">' +
         '<span>' + esc(fecha(it.creado_en)) + ' · ' + esc(it.item_nombre || 'En general') + '</span>' +
-        '<span>' + (it.estrellas ? '<b style="color:#b8860b;font-size:15px">' + estrellas(it.estrellas) + '</b>' : '') + '</span></div>' +
-        '<label style="font-size:12px">Nombre que se verá en público<input data-f="nombre" style="' + campo + '" maxlength="60" value="' + esc(it.nombre) + '"' + (edit ? '' : ' disabled') + '></label>' +
-        '<label style="font-size:12px">Comentario<textarea data-f="comentario" rows="3" maxlength="1000" style="' + campo + '"' + (edit ? '' : ' disabled') + '>' + esc(it.comentario) + '</textarea></label>' +
+        '<span>' + (it.estrellas ? '<b style="color:#b8860b;font-size:13px">' + estrellas(it.estrellas) + '</b>' : '') + '</span></div>' +
+        '<input data-f="nombre" aria-label="Nombre público" style="' + campo + 'font-weight:600" maxlength="60" value="' + esc(it.nombre) + '"' + (edit ? '' : ' disabled') + '>' +
+        '<textarea data-f="comentario" aria-label="Comentario" rows="3" maxlength="1000" style="' + campo + 'resize:vertical"' + (edit ? '' : ' disabled') + '>' + esc(it.comentario) + '</textarea>' +
         '<div data-media="' + it.id + '"></div>' +
-        (it.codigo ? '<div style="font-size:13px">Código: <b>' + esc(it.codigo) + '</b> ' +
-          (it.mostrar_codigo ? '<span class="chip verde">autorizó mostrarlo</span>' : '<span class="chip gris">no autorizó mostrarlo</span>') + ' ' +
-          (it.codigo_coincide ? '<span class="chip verde">teléfono coincide ✓</span>' : '<span class="chip ocre">no se pudo verificar</span>') +
-          (it.afiliado ? '<br>Afiliado/a: <b>' + esc(it.afiliado) + '</b>' : '') + '</div>' : '') +
-        (edit && it.contacto ? '<div style="font-size:13px">Contacto (privado): <b>' + esc(it.contacto) + '</b></div>' : '') +
-        '<div style="font-size:11px;color:var(--tinta-suave)">Autorización v' + esc(String(it.consentimiento_version || '').replace(/^v/, '')) + ' · ' + esc(fecha(it.consentimiento_en)) +
+        (it.codigo ? '<div style="font-size:12px">Código: <b>' + esc(it.codigo) + '</b> ' +
+          (it.mostrar_codigo ? '<span class="chip verde">autorizó mostrarlo</span>' : '<span class="chip gris">no autorizó</span>') + ' ' +
+          (it.codigo_coincide ? '<span class="chip verde">teléfono coincide ✓</span>' : '<span class="chip ocre">sin verificar</span>') +
+          (it.afiliado ? ' · ' + esc(it.afiliado) : '') + '</div>' : '') +
+        (edit && it.contacto ? '<div style="font-size:12px">Contacto (privado): <b>' + esc(it.contacto) + '</b></div>' : '') +
+        '<details style="font-size:11px;color:var(--tinta-suave)"><summary style="cursor:pointer">Nota interna y autorización</summary>' +
+        '<div style="margin:4px 0">Autorización v' + esc(String(it.consentimiento_version || '').replace(/^v/, '')) + ' · ' + esc(fecha(it.consentimiento_en)) +
         (it.moderado_en ? ' · Revisada ' + esc(fecha(it.moderado_en)) : '') + '</div>' +
-        '<label style="font-size:12px">Nota interna (no se publica)<input data-f="nota" style="' + campo + '" maxlength="300" value="' + esc(it.nota) + '"' + (edit ? '' : ' disabled') + '></label>' +
-        (acc.length ? '<div style="display:flex;gap:8px;flex-wrap:wrap">' + acc.join('') + '</div>' : '') +
+        '<input data-f="nota" aria-label="Nota interna (no se publica)" placeholder="Nota interna (no se publica)" style="' + campo + '" maxlength="300" value="' + esc(it.nota) + '"' + (edit ? '' : ' disabled') + '></details>' +
+        (acc.length ? '<div style="display:flex;gap:6px;flex-wrap:wrap">' + acc.join('') + '</div>' : '') +
         '</div>';
     }).join('');
 
+    html += '</div>' + barraPaginas(total, paginas);
     cont.innerHTML = html;
 
-    cont.querySelectorAll('[data-est]').forEach((b) => b.addEventListener('click', () => { estadoActivo = b.dataset.est; window.renderExperiencias(); }));
+    cont.querySelectorAll('[data-est]').forEach((b) => b.addEventListener('click', () => { estadoActivo = b.dataset.est; pagina = 0; window.renderExperiencias(); }));
+    cont.querySelectorAll('[data-pg]').forEach((b) => b.addEventListener('click', () => {
+      pagina = Math.max(0, Math.min(paginas - 1, pagina + Number(b.dataset.pg)));
+      window.renderExperiencias();
+      cont.scrollIntoView({ block: 'start' });
+    }));
 
     /* Audio y foto (enlaces temporales para lo no publicado) */
     items.forEach(async (it) => {
@@ -112,8 +140,8 @@
       if (!box || (!it.audio && !it.foto)) return;
       const [a, f] = await Promise.all([urlArchivo(it, it.audio), urlArchivo(it, it.foto)]);
       let h = '';
-      if (f) h += '<img src="' + esc(f) + '" alt="Foto enviada" style="max-width:100%;max-height:260px;border-radius:10px;display:block;margin-bottom:8px">';
-      if (a) h += '<audio controls preload="none" src="' + esc(a) + '" style="width:100%"></audio>';
+      if (f) h += '<a href="' + esc(f) + '" target="_blank" rel="noopener" title="Abrir foto completa"><img src="' + esc(f) + '" alt="Foto enviada" style="height:110px;max-width:100%;object-fit:cover;border-radius:8px;display:block;margin-bottom:6px"></a>';
+      if (a) h += '<audio controls preload="none" src="' + esc(a) + '" style="width:100%;height:34px"></audio>';
       if (!a && !f) h = '<div style="font-size:12px;color:#a12b2b">No se pudo abrir el archivo adjunto.</div>';
       box.innerHTML = h;
     });
