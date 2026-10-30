@@ -739,6 +739,7 @@
       <button class="enlace oculto" id="nav-auditoria" data-vista="auditoria">🕵️ Auditoría</button>
       <button class="enlace oculto" id="nav-reporte" data-vista="reporte_contable">📑 Reporte contable</button>
       <button class="enlace oculto" id="nav-novedades" data-vista="novedades">📣 Novedades por correo</button>
+      <button class="enlace oculto" id="nav-experiencias" data-vista="experiencias">⭐ Experiencias</button>
     </nav>
     <div class="pie-usuario">
       <div class="usuario-info-box">
@@ -1411,6 +1412,7 @@ function mostrarApp(){
     document.getElementById('nav-auditoria').classList.remove('oculto');
     document.getElementById('nav-reporte').classList.remove('oculto');
     document.getElementById('nav-novedades').classList.remove('oculto');
+    document.getElementById('nav-experiencias').classList.remove('oculto');
   } else {
     Object.keys(TABLAS).forEach(vista=>{
       const t = TABLAS[vista];
@@ -1589,6 +1591,12 @@ async function cargarVista(vista){
     document.getElementById('titulo-vista').textContent = 'Permisos por área';
     document.getElementById('subtitulo-vista').textContent = 'Quién puede editar o solo ver cada área del panel.';
     return renderPermisosArea();
+  }
+  if (vista === 'experiencias'){
+    if (!esAdmin) return mostrarSinAcceso('Experiencias');
+    document.getElementById('titulo-vista').textContent = 'Experiencias';
+    document.getElementById('subtitulo-vista').textContent = 'Revisa y aprueba lo que la gente publica.';
+    return window.renderExperiencias();
   }
   if (vista === 'novedades'){
     if (!esAdmin) return mostrarSinAcceso('Novedades por correo');
@@ -3967,5 +3975,6 @@ sb.auth.onAuthStateChange((evento)=>{
 </script>
 <script type="module" src="asistente.js"></script>
 <script type="module" src="novedades.js"></script>
+<script type="module" src="experiencias.js"></script>
 </body>
 </html>
