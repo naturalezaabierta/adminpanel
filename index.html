@@ -3425,7 +3425,8 @@ window.__eliminarEmbajador = async (id)=>{
     : '¿Eliminar a ' + quien + '?\n\nSe borra su código y se libera el cupo. Solo se puede si todavía no tiene ventas, comisiones ni referidos.';
   if (!confirm(aviso)) return;
 
-  const { data, error } = await sb.rpc('fn_panel_eliminar_embajador', { p_embajador_id: id });
+  let { data, error } = await sb.functions.invoke('admin-eliminar-embajador', { body: { embajador_id: id } });
+  if (error && error.context && error.context.json) { try { data = await error.context.json(); error = null; } catch (_) {} }
   if (error || !data || !data.ok){
     const c = data && data.error;
     const m = c === 'tiene_actividad' ? 'No se puede eliminar: ya tiene ventas, comisiones o referidos. Gestiona esa cuenta desde Pagos a referidos → Afiliados.'
