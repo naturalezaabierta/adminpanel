@@ -32,7 +32,19 @@
     return o;
   }
   const ext = (f) => (f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+  async function reducir(f) {
+    if (!f.type.startsWith('image/')) return f;
+    try {
+      const bmp = await createImageBitmap(f);
+      const k = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+      const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+      c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+      const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.85));
+      return blob ? new File([blob], f.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : f;
+    } catch (e) { return f; }
+  } 
   async function subir(carpeta, f) {
+  f = await reducir(f);   
     const esVideo = f.type.startsWith('video/');
     if (!esVideo && !f.type.startsWith('image/')) throw new Error('Solo fotos (jpg, png, webp) o videos (mp4, webm).');
     if (!esVideo && f.size > 8 * 1024 * 1024) throw new Error('La foto "' + f.name + '" pesa más de 8 MB.');
@@ -127,7 +139,7 @@
     const f = body.querySelector('[data-f]'), prev = body.querySelector('[data-prev]');
     body.querySelector('[data-pick]').onclick = () => f.click();
     body.querySelector('[data-nopic]').onclick = () => { imagen = ''; prev.style.display = 'none'; };
-    f.onchange = async () => { if (!f.files[0]) return; try { const r = await subir('banner', f.files[0]); imagen = r.url; prev.src = imagen; prev.style.display = ''; } catch (e) { aviso(e.message, true); } };
+    f.onchange = async () => { if (!f.files[0]) return; const bt = body.querySelector('[data-pick]'); bt.textContent = 'Subiendo…'; try { const r = await subir('banner', f.files[0]); imagen = r.url; prev.src = imagen; prev.style.display = ''; aviso('Foto subida. Ahora pulsa Guardar banner.'); } catch (e) { alert('No se pudo subir la foto: ' + (e.message || e)); } bt.textContent = 'Elegir foto'; };
     body.querySelector('[data-save]').onclick = async () => {
       const filas = Array.from(body.querySelectorAll('[data-k]')).map((i) => ({ clave: i.dataset.k, valor: i.value.trim() }));
       filas.push({ clave: 'banner_imagen', valor: imagen });
