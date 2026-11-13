@@ -721,6 +721,7 @@
 
       <div class="separador">Catálogo</div>
       <button class="enlace" data-vista="productos_servicios">🌿 Productos y servicios</button>
+      <button class="enlace" onclick="window.__bannerTienda && window.__bannerTienda()">🖼️ Banner de la tienda</button>
       <button class="enlace" data-vista="eventos_experiencias">🎫 Eventos y experiencias</button>
 
       <div class="separador">Bot Valentina</div>
@@ -1447,7 +1448,7 @@ function mostrarApp(){
    ========================================================= */
 document.getElementById('nav-principal').addEventListener('click', (e)=>{
   const btn = e.target.closest('.enlace');
-  if (!btn) return;
+  if (!btn || !btn.dataset.vista) return;
   cargarVista(btn.dataset.vista);
 });
 
@@ -1751,6 +1752,7 @@ function renderTabla(vista, filas){
       botones += `<button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__editarFila('${vista}','${fila[t.pk]}')">Editar</button>`;
     }
     if ((vista === 'productos_servicios' || vista === 'eventos_experiencias') && puedeEditar(vista)){
+      botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__medios('${vista}','${fila[t.pk]}')">📷 Fotos y video</button>`;
       botones += ` <button class="secundario" style="padding:4px 10px;font-size:12px;" onclick="window.__clonarFila('${vista}','${fila[t.pk]}')">Clonar</button>`;
     }
     if (['productos_servicios','eventos_experiencias','creativos'].includes(vista) && puedeEditar(vista)){
@@ -3983,5 +3985,6 @@ sb.auth.onAuthStateChange((evento)=>{
 <script type="module" src="asistente.js"></script>
 <script type="module" src="novedades.js"></script>
 <script type="module" src="experiencias.js"></script>
+<script type="module" src="medios.js"></script>
 </body>
 </html>
